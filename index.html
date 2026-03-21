@@ -35,7 +35,7 @@ body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSyste
 .mpane{display:none;} .mpane.on{display:block;}
 label{font-size:13px;color:var(--t2);display:block;margin-bottom:6px;font-family:'SF Mono','Fira Code','Courier New',monospace;}
 label .op{color:var(--t3);font-weight:300;}
-input,textarea,select{width:100%;background:var(--bg3);border:.5px solid var(--bo2);border-radius:var(--r);padding:11px 13px;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:var(--t);outline:none;transition:border .15s;appearance:none;-webkit-appearance:none;min-height:var(--tap);}
+input:not([type=checkbox]):not([type=file]),textarea,select{width:100%;background:var(--bg3);border:.5px solid var(--bo2);border-radius:var(--r);padding:11px 13px;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:var(--t);outline:none;transition:border .15s;appearance:none;-webkit-appearance:none;min-height:var(--tap);}input[type=checkbox]{cursor:pointer;}
 input:focus,textarea:focus,select:focus{border-color:var(--ac);}
 textarea{resize:vertical;line-height:1.6;min-height:80px;}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239898a8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
@@ -177,10 +177,10 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
   <div id="wa-note-wrap" style="display:none;margin-top:12px;background:rgba(62,207,142,.05);border:.5px solid rgba(62,207,142,.2);border-radius:var(--r);padding:12px 13px;">
     <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--t2);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;">
-      <input type="checkbox" id="wa-incl" style="width:18px;height:18px;min-height:0;accent-color:var(--gr);cursor:pointer;flex-shrink:0;" onchange="toggleWANote()">
+      <input type="checkbox" id="wa-incl" style="width:18px;height:18px;min-height:0;accent-color:var(--gr);cursor:pointer;flex-shrink:0;" onchange="toggleWANote()" onclick="setTimeout(toggleWANote,0)">
       <span>Tell the AI this conversation is included and I am always <strong style="color:var(--gr);">A</strong> in the chat history</span>
     </label>
-    <div id="wa-note-text" style="display:none;margin-top:8px;font-size:12px;color:var(--t3);font-family:'SF Mono','Fira Code','Courier New',monospace;line-height:1.6;">This will add a note to every prompt explaining the WhatsApp export is attached and that A = you.</div>
+    <div id="wa-note-text" style="display:none;margin-top:8px;font-size:12px;color:var(--gr);font-family:'SF Mono','Fira Code','Courier New',monospace;line-height:1.6;">The AI will be told to expect a .txt file attachment and that A = you. Paste or attach the file alongside the prompt in the AI chat.</div>
   </div>
 </div>
 
@@ -828,8 +828,8 @@ function toggleWANote(){
 }
 function getWABlock(){
   var cb=document.getElementById('wa-incl');
-  if(!cb||!cb.checked||!extConv)return'';
-  return'\n\nWHATSAPP CONVERSATION HISTORY ATTACHED:\nThe full conversation export is included above. In this export, A = me (the user). Read A as my messages and the other name as her messages. Use this full history to inform your response — do not repeat ground already covered, build on what has already been said, and reference specific things from the conversation where relevant.';
+  if(!cb||!cb.checked)return'';
+  return'\n\nWHATSAPP EXPORT NOTE:\nI will attach or paste the WhatsApp .txt export file alongside this prompt. In that file, A = me (the user sending you this prompt). Read all messages from A as mine and the other name as hers. Use the full conversation history to inform your response — do not repeat ground already covered, build on what has already been said, reference specific things from the conversation, and treat the chat history as essential context for everything you generate.';
 }
 function showN(msg){var n=document.getElementById('notif');n.textContent=msg;n.style.display='block';setTimeout(function(){n.style.display='none';},3000);}
 
