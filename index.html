@@ -196,7 +196,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
 <div class="card">
   <div class="ctag">Pick your situation</div>
+  <div class="row" style="margin-bottom:12px;">
+    <input type="text" id="mode-search" placeholder="Search modes e.g. opener, re-engage, date..." oninput="filterModes(this.value)" style="font-size:14px;">
+  </div>
   <div class="mbox" id="mode-grid"></div>
+  <div id="no-modes" style="display:none;font-size:13px;color:var(--t3);padding:8px 0;">No modes match — try a different word</div>
 </div>
 
 <div class="card" id="form-card" style="display:none;">
@@ -413,6 +417,9 @@ var FLD={
   fdp_idea:{l:'Your date idea / what you are thinking',t:'ta',p:'e.g. Thinking dinner at a small Italian place, maybe bring a Zotter chocolate I saw that reminded me of something she mentioned...'},
   fdp_location:{l:'City / area',t:'txt',p:'e.g. Vienna, 1st district'},
   fdp_ctx:{l:'Anything else to factor in',t:'ta',p:'e.g. First date, she seemed nervous in chat, she does not drink...',opt:true,rows:2},
+  her_name:{l:'Her name',t:'txt',p:'e.g. Sara',opt:true},
+  last_met:{l:'Last time you met in person',t:'sel',o:['Never met yet','Today / yesterday','A few days ago','About a week ago','2+ weeks ago','A month or more'],opt:true},
+  mood:{l:'Overall conversation mood',t:'chips',o:['Just started','Dying / going flat','Holding steady','Warm and good','Really great energy'],opt:true},
 };
 
 // Build mode grid
@@ -427,6 +434,20 @@ var FLD={
   });
 })();
 
+function filterModes(q){
+  var cards=document.querySelectorAll('.mcard');
+  var low=q.toLowerCase().trim();
+  var visible=0;
+  cards.forEach(function(b){
+    var text=(b.textContent||'').toLowerCase();
+    var id=b.getAttribute('data-id')||'';
+    var show=!low||text.indexOf(low)>=0||id.indexOf(low.replace(/\s/g,'_'))>=0;
+    b.style.display=show?'':'none';
+    if(show)visible++;
+  });
+  var nm=document.getElementById('no-modes');
+  if(nm)nm.style.display=visible===0?'block':'none';
+}
 function selMode2(id,pre){
   selMode=id;
   document.querySelectorAll('.mcard').forEach(function(b){b.className='mcard'+(b.getAttribute('data-id')===id?' on':'');});
@@ -549,17 +570,71 @@ var QK={
   what_bond:['what would bond do','what should i do','how should i handle','how would bond','bond approach'],
   first_date_planner:['first date plan','plan the date','date idea','what to bring','what to talk about on the date','zotter','chocolate'],
 };
+// Quick start follow-up questions per mode
+var QFU={
+  bond_reply:['What platform? (Tinder / Bumble / WhatsApp)','How long have you been talking?'],
+  tone_reader:['Has the energy changed recently or been like this throughout?'],
+  followup:['How many days since you sent your last message?','Was the conversation going well before?'],
+  reengage:['How long has it been quiet?','Did something specific cause you to go quiet?'],
+  shit_test:['Did she go cold after this or is she still engaging?'],
+  went_cold:['Did anything specific happen right before she went cold?'],
+  cancelled:['Same day or did she give more notice?'],
+  after_date:['Sending morning after or later in the day?'],
+  vague_plans:['Has she actually said yes at any point or just been non-committal?'],
+  first_date:['Suggesting, confirming, or messaging after?'],
+};
+
 function qSuggest(v){
   if(!v||v.length<6){document.getElementById('qr').className='qr-res';return;}
-  var low=v.toLowerCase(),best='',bsc=0;
-  Object.keys(QK).forEach(function(k){QK[k].forEach(function(kw){if(low.indexOf(kw)>=0&&kw.length>bsc){bsc=kw.length;best=k;}});});
-  if(!best){document.getElementById('qr').className='qr-res';return;}
-  qMode=best;
-  var m=MODES.find(function(x){return x.id===best;});
-  document.getElementById('qr-text').innerHTML='Looks like: <strong>'+m.n+'</strong> — '+m.s;
+  var low=v.toLowerCase();
+  var scores={};
+  Object.keys(QK).forEach(function(k){
+    scores[k]=0;
+    QK[k].forEach(function(kw){if(low.indexOf(kw)>=0&&kw.length>scores[k])scores[k]=kw.length;});
+  });
+  var ranked=Object.keys(scores).filter(function(k){return scores[k]>0;}).sort(function(a,b){return scores[b]-scores[a];}).slice(0,3);
+  if(!ranked.length){document.getElementById('qr').className='qr-res';return;}
+  qMode=ranked[0];
+  var container=document.getElementById('qr-text');
+  container.innerHTML='';
+  ranked.forEach(function(k,i){
+    var m=MODES.find(function(x){return x.id===k;});
+    if(!m)return;
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;';
+    var label=document.createElement('span');
+    if(i===0){label.style.cssText='color:var(--t);font-weight:500;';}else{label.style.color='var(--t2)';}
+    label.innerHTML=m.n+'<span style="color:var(--t3);font-size:12px;font-weight:300;"> — '+m.s+'</span>';
+    var btn=document.createElement('button');
+    btn.className='btn2 btn-sm';
+    btn.textContent='Use';
+    (function(mid){btn.onclick=function(){applyQ(mid);};})(k);
+    row.appendChild(label);
+    row.appendChild(btn);
+    container.appendChild(row);
+  });
+  var fu=QFU[ranked[0]];
+  if(fu&&fu.length){
+    var div=document.createElement('div');
+    div.style.cssText='margin-top:8px;padding-top:8px;border-top:.5px solid var(--bo);';
+    var lbl=document.createElement('div');
+    lbl.style.cssText='font-size:11px;color:var(--ac);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;';
+    lbl.textContent='ONE MORE THING';
+    var q=document.createElement('div');
+    q.style.cssText='font-size:13px;color:var(--t2);line-height:1.5;';
+    q.textContent=fu[0];
+    div.appendChild(lbl);
+    div.appendChild(q);
+    container.appendChild(div);
+  }
   document.getElementById('qr').className='qr-res on';
 }
-function applyQ(){if(qMode)selMode2(qMode);}
+function applyQ(id){
+  var target=id||qMode;
+  if(target)selMode2(target);
+  document.getElementById('qr').className='qr-res';
+  document.getElementById('qi').value='';
+}
 
 // File upload
 function handleFile(inp){
@@ -641,17 +716,20 @@ function vbBlock(){var v=gv('her_vibe');return v?'\n\nHer vibe / bio impression:
 // Mode prompts
 function getModeP(id,v){
   var S=getSys();
-  if(id==='bond_reply')return S+'MODE: BOND REPLY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+tmBlock()+vbBlock()+stBlock()+'\n\nHer message:\n"'+gv('her_msg')+'"'+(gv('context')?'\n\nContext:\n'+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Read her message carefully. Acknowledge her tone and note any specific detail worth calling back.\n2. SUBTEXT CHECK: if subtext was specified, read through that lens first.\n3. MIRROR CHECK: what is her investment level? All replies must match it.\n4. Generate 4 reply styles: Calm and charming / Short and confident / Warm and genuine / Lightly flirtatious.\n5. For each: message EN+DE, 1-sentence psychological note, Question Logic decision.\n6. Flag any connection risk.';
+
+function nmBlock(){var n=gv('her_name');return n?' Address her as '+n+' where it fits naturally — do not force it, only use when it flows.':'';}
+function moodBlock(){var m=gv('mood');return m&&m!=='Just started'?'\n\nConversation mood so far: '+m+'. Let this inform the energy level of your suggestions.':'';}
+function lmBlock(){var lm=gv('last_met');return lm&&lm!=='Never met yet'?'\n\nLast met in person: '+lm+'. Factor this into how familiar the tone should be.':'';}  if(id==='bond_reply')return S+'MODE: BOND REPLY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+nmBlock()+moodBlock()+lmBlock()+tmBlock()+vbBlock()+stBlock()+'\n\nHer message:\n"'+gv('her_msg')+'"'+(gv('context')?'\n\nContext:\n'+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Read her message carefully. Acknowledge her tone and note any specific detail worth calling back.\n2. SUBTEXT CHECK: if subtext was specified, read through that lens first.\n3. MIRROR CHECK: what is her investment level? All replies must match it.\n4. Generate 4 reply styles: Calm and charming / Short and confident / Warm and genuine / Lightly flirtatious.\n5. For each: message EN+DE, 1-sentence psychological note, Question Logic decision.\n6. Flag any connection risk.';
   if(id==='bondify')return S+'MODE: BOND-IFY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+'\n\nMy draft:\n"'+gv('my_draft')+'"\n\nInstructions:\n1. Diagnose in 1 honest sentence — what is the core problem?\n2. Rewrite as Bond. Show original phrase, Bond version, and psychological reason. Tag: needy removed / confidence added / shorter / word choice / structure / framing.\n3. List 2-4 specific changes.\n4. Question Logic: does the Bond version end with a question? Why or why not?\n5. Connection risk: original vs Bond version.';
   if(id==='presend')return S+'MODE: PRE-SEND CHECK\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+'\n\nMessage about to send:\n"'+gv('my_draft')+'"\n\nInstructions:\n1. Scores: Confidence 0-10 / Neediness 0-10 / Length: too long, good, or too short.\n2. Mirror check: does this match her energy level or exceed it?\n3. Issues (0-3 max): what is wrong, psychological reason, specific fix.\n4. Improved version if needed.\n5. Question Logic decision.\n6. Connection risk of original vs improved.';
   if(id==='opener')return S+'MODE: OPENER\n\nPlatform: '+gv('platform')+'\nStyle: '+gv('opener_style')+'\n\nHer profile:\n'+gv('her_bio')+vBlock(v)+'\n\nInstructions:\n1. Note 3 specific details from her profile most men would ignore.\n2. Generate 3 openers — each referencing something specific from her profile. No generic lines.\n3. For each: the message, which detail you used, why specificity beats generic openers.\n4. Question Logic for each opener.';
-  if(id==='tone_reader')return S+'MODE: TONE READER\n\nHer message:\n"'+gv('her_msg')+'"'+tmBlock()+vbBlock()+(gv('subtext')?'\n\nUser thinks the subtext might be: '+gv('subtext')+'. Confirm or challenge this read with reasoning.':'')+(gv('context')?'\n\nContext:\n'+gv('context'):'')+'\n\nInstructions:\n1. Signal: very interested / interested / neutral / testing you / going cold / hard to read. Confidence: high/medium/low.\n2. Psychological reasoning.\n3. Specific word or phrase she used that reveals something.\n4. Her energy level — is she investing equally, more, or less?\n5. What deserves acknowledgement in the reply.\n6. What to avoid and why.\n7. Suggested approach for the reply.';
+  if(id==='tone_reader')return S+'MODE: TONE READER\n\nHer message:\n"'+gv('her_msg')+'"'+moodBlock()+lmBlock()+tmBlock()+vbBlock()+(gv('subtext')?'\n\nUser thinks the subtext might be: '+gv('subtext')+'. Confirm or challenge this read with reasoning.':'')+(gv('context')?'\n\nContext:\n'+gv('context'):'')+'\n\nInstructions:\n1. Signal: very interested / interested / neutral / testing you / going cold / hard to read. Confidence: high/medium/low.\n2. Psychological reasoning.\n3. Specific word or phrase she used that reveals something.\n4. Her energy level — is she investing equally, more, or less?\n5. What deserves acknowledgement in the reply.\n6. What to avoid and why.\n7. Suggested approach for the reply.';
   if(id==='red_flags')return S+'MODE: RED FLAGS\n\nDays talking: '+gv('days_talking')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Note any shifts in energy, tone changes, response length patterns.\n2. Overall rating: green / yellow / red with reasoning.\n3. 0-4 flags. For each: pattern name, specific observation, psychological meaning, whether to address or ignore it and why.\n4. Main takeaway.';
   if(id==='escalation')return S+'MODE: ESCALATION CHECK\n\nDays talking: '+gv('days_talking')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Pace: too slow / on track / moving fast / moving too fast.\n2. Mirror assessment: where is she emotionally vs where are you? Is the investment balanced?\n3. Specific next move with psychological justification.\n4. One thing to avoid and what it would signal.';
-  if(id==='followup')return S+'MODE: FOLLOW-UP\n\nDays since sent: '+gv('days_since')+'\nHow it was going: '+gv('vibe')+'\n\nMy last message:\n"'+gv('my_last')+'"'+vBlock(v)+'\n\nInstructions:\n1. Verdict: send / do not send / wait longer.\n2. Psychological reasoning — what does sending vs not sending signal?\n3. Message if sending. Why this approach protects the connection.\n4. One thing to avoid.\n5. Question Logic.';
-  if(id==='reengage')return S+'MODE: RE-ENGAGE\n\nQuiet for: '+gv('quiet_dur')+'\nReasons: '+gv('quiet_why')+'\nVibe before: '+gv('vibe_bef')+'\n\nLast interaction:\n'+gv('last_inter')+vBlock(v)+'\n\nInstructions:\n1. Verdict: reach out / leave it.\n2. What does reaching out signal vs silence here?\n3. If reaching out: message that acknowledges the gap without over-explaining (over-explanation signals guilt and neediness).\n4. The one thing that would ruin this re-engage.\n5. Question Logic.';
+  if(id==='followup')return S+'MODE: FOLLOW-UP\n\nDays since sent: '+gv('days_since')+'\nHow it was going: '+gv('vibe')+moodBlock()+lmBlock()+'\n\nMy last message:\n"'+gv('my_last')+'"'+vBlock(v)+'\n\nInstructions:\n1. Verdict: send / do not send / wait longer.\n2. Psychological reasoning — what does sending vs not sending signal?\n3. Message if sending. Why this approach protects the connection.\n4. One thing to avoid.\n5. Question Logic.';
+  if(id==='reengage')return S+'MODE: RE-ENGAGE\n\nQuiet for: '+gv('quiet_dur')+'\nReasons: '+gv('quiet_why')+'\nVibe before: '+gv('vibe_bef')+lmBlock()+'\n\nLast interaction:\n'+gv('last_inter')+vBlock(v)+'\n\nInstructions:\n1. Verdict: reach out / leave it.\n2. What does reaching out signal vs silence here?\n3. If reaching out: message that acknowledges the gap without over-explaining (over-explanation signals guilt and neediness).\n4. The one thing that would ruin this re-engage.\n5. Question Logic.';
   if(id==='unmatch')return S+'MODE: UNMATCH ANALYSIS\n\nWhat happened: '+gv('what_hap')+'\n\nLast messages:\n'+gv('conv')+'\n\nInstructions:\n1. Note any specific moment where things shifted.\n2. What likely happened — 1 honest sentence.\n3. 2-3 patterns: name / specific observation / psychological mechanism / concrete lesson.\n4. The one shift that would have changed the outcome.';
-  if(id==='first_date')return S+'MODE: FIRST DATE TEXT\n\nSituation: '+gv('fd_sit')+'\nPlatform: '+gv('platform')+'\nContext: '+gv('fd_ctx')+vBlock(v)+'\n\nInstructions:\n1. Psychology of this specific moment — what is she feeling, what does she need to see.\n2. Generate 2 message options.\n3. For each: why it fits the moment, what it signals, connection risk.\n4. Question Logic for each.';
+  if(id==='first_date')return S+'MODE: FIRST DATE TEXT\n\nSituation: '+gv('fd_sit')+'\nPlatform: '+gv('platform')+'\nContext: '+gv('fd_ctx')+nmBlock()+vBlock(v)+'\n\nInstructions:\n1. Psychology of this specific moment — what is she feeling, what does she need to see.\n2. Generate 2 message options.\n3. For each: why it fits the moment, what it signals, connection risk.\n4. Question Logic for each.';
   if(id==='cancelled')return S+'MODE: SHE CANCELLED\n\nHow far out: '+gv('can_tim')+'\nVibe: '+gv('vibe')+'\n\nWhat she said:\n"'+gv('can_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. Read her cancellation — warm / cold / guilty / vague? This signals a lot.\n2. Three strategies: Confident reschedule / Play it cool / Light and unbothered.\n3. For each: message, what it signals about your investment level, risk/reward, when to use it.\n4. Which strategy fits this specific situation and why.';
   if(id==='number')return S+'MODE: NUMBER EXCHANGE\n\nSituation: '+gv('num_sit')+'\nPlatform: '+gv('platform')+(gv('context')?'\nContext: '+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Why this transition moment is psychologically significant and what can go wrong.\n2. Two message options.\n3. For each: what it signals and why the framing matters.\n4. Question Logic.';
   if(id==='first_move')return S+'MODE: FIRST MOVE\n\nWhat she did: '+gv('fm_type')+'\nPlatform: '+gv('platform')+'\n\nWhat she said:\n"'+gv('her_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. Is this genuine interest, testing, boredom, or something else?\n2. Why this is a frame test and what losing the frame looks like.\n3. Two responses that keep you in the driver seat.\n4. For each: how it maintains frame without being cold.\n5. Question Logic.';
@@ -666,7 +744,7 @@ function getModeP(id,v){
   if(id==='shit_test')return S+"MODE: SHE IS TESTING ME\n\nType of test: "+gv('st_type')+'\nStage: '+gv('stage')+'\n\nWhat she said or did:\n"'+gv('her_msg')+'"'+(gv('context')?'\n\nContext:\n'+gv('context'):'')+vBlock(v)+"\n\nInstructions:\n1. Identify the test: what is she actually testing for? (confidence / frame / neediness / reaction to provocation / whether you will chase)\n2. What most men do wrong here and the psychological reason it fails.\n3. What passing looks like vs what failing looks like.\n4. Generate 3 responses that pass the test: Option A — calm and unbothered / Option B — light humour that deflects without engaging the frame / Option C — confident reframe that takes the lead.\n5. For each: message, why it passes the test, what it signals.\n6. Question Logic and No Repeat Rule.";
   if(id==='went_cold')return S+'MODE: SHE WENT COLD\n\nWhen it changed: '+gv('wc_when')+'\nDays talking: '+gv('days_talking')+vBlock(v)+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Identify the exact moment the energy shifted if visible.\n2. Diagnosis: what likely caused it?\n3. What most men do wrong here (double texting, over-explaining, going cold back) and why each fails.\n4. Verdict: worth addressing or not? If yes how. If no — why silence is the stronger move.\n5. If addressing: 2 messages — one that acknowledges the shift lightly, one that re-engages naturally as if nothing happened. Explain the risk/reward of each.\n6. Question Logic. No Repeat Rule.';
   if(id==='slow_down')return S+'MODE: SLOW DOWN\n\nStage: '+gv('stage')+vBlock(v)+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Assess: in what way is this moving too fast?\n2. Why slowing down intentionally is the right move — the psychological effect of slight scarcity on attraction.\n3. How to pull back without creating confusion or anxiety on her side.\n4. Generate 2-3 messages or a tactical approach for the next 2-3 days that naturally reduces pace without disappearing.\n5. What to avoid — things that would read as rejection rather than confidence.\n6. Question Logic. No Repeat Rule.';
-  if(id==='after_date')return S+'MODE: AFTER GREAT DATE\n\nTiming: '+gv('ad_time')+'\nPlatform: '+gv('platform')+vBlock(v)+'\n\nHow the date went:\n'+gv('date_ctx')+'\n\nInstructions:\n1. Psychology of the post-date window — what she is feeling, what she needs to see from you, why this moment is delicate.\n2. The two failure modes: too much too soon (clingy) vs too little too late (she thinks you are not interested).\n3. Generate 3 message options at different energy levels: minimal / warm / warmer.\n4. For each: message, what it signals, connection risk, whether it opens the door to a second date naturally.\n5. How to move toward a second date without making it feel like a formal ask.\n6. Question Logic. No Repeat Rule.';
+  if(id==='after_date')return S+'MODE: AFTER GREAT DATE\n\nTiming: '+gv('ad_time')+'\nPlatform: '+gv('platform')+nmBlock()+lmBlock()+vBlock(v)+'\n\nHow the date went:\n'+gv('date_ctx')+'\n\nInstructions:\n1. Psychology of the post-date window — what she is feeling, what she needs to see from you, why this moment is delicate.\n2. The two failure modes: too much too soon (clingy) vs too little too late (she thinks you are not interested).\n3. Generate 3 message options at different energy levels: minimal / warm / warmer.\n4. For each: message, what it signals, connection risk, whether it opens the door to a second date naturally.\n5. How to move toward a second date without making it feel like a formal ask.\n6. Question Logic. No Repeat Rule.';
   if(id==='vague_plans')return S+'MODE: VAGUE ABOUT PLANS\n\nHow long this has been going on: '+gv('vp_dur')+'\nStage: '+gv('stage')+vBlock(v)+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Diagnose: why is she being vague? (genuinely busy / losing interest / wants you to lead harder / testing)\n2. The difference between genuine busy and soft-no — how to read which this is from the conversation.\n3. What most men do wrong here and why each approach fails.\n4. Verdict: push for a specific time now, or back off and let her come to you?\n5. If pushing: a message that proposes a specific time confidently without sounding desperate.\n6. If backing off: a message that creates light scarcity without going cold.\n7. Question Logic. No Repeat Rule.';
   if(id==='bio')return S+'MODE: BIO WRITER\n\nPlatform: '+gv('platform')+'\nLength: '+gv('bio_len')+'\n\nAbout me:\n'+gv('my_facts')+'\n\nInstructions:\n1. Write the bio — confident not bragging, specific not generic, slightly mysterious, no cliches like love to laugh or work hard play hard.\n2. After writing: explain the approach — what psychological impression it creates, why specificity beats generic claims, why leaving something out creates intrigue.';
   if(id==='date_ideas')return S+'MODE: DATE IDEAS\n\nCity: '+gv('city')+'\nBudget: '+gv('budget')+'\n\nHer interests:\n'+gv('her_int')+'\n\nInstructions:\n1. Generate 3 specific date ideas for this city and budget.\n2. For each: name, why it works for attraction dynamics, Bond-style suggestion line.\n3. Flag which has the best risk/reward for a first date and why.';
@@ -880,7 +958,7 @@ function doImport(inp){
 </script>
 
 <script>
-if('serviceWorker' in navigator){
+try{if('serviceWorker' in navigator){
   var SW_VERSION='v1';
   var CACHE='bondsuite-'+SW_VERSION;
   var sw_code=[
@@ -920,8 +998,8 @@ if('serviceWorker' in navigator){
         }
       });
     });
-  }).catch(function(e){console.log('SW registration failed:',e);});
-}
+  }).catch(function(){});
+}}catch(e){}
 </script>
 </body>
 </html>
