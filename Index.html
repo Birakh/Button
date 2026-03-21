@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test</title>
+<style>
+body{background:#0e0e10;color:#e8e8ec;font-family:sans-serif;padding:20px}
+button{display:block;width:100%;padding:16px;margin:10px 0;background:#c8a96e;color:#000;border:none;border-radius:10px;font-size:16px;cursor:pointer}
+#out{background:#1f1f23;padding:14px;border-radius:10px;margin-top:10px;min-height:40px}
+</style>
+</head>
+<body>
+<h2 style="color:#c8a96e">JS Test</h2>
+<button id="btn1">Tap me</button>
+<button id="btn2">Tap me too</button>
+<div id="out">Waiting for tap...</div>
+<script>
+var count = 0;
+document.getElementById('btn1').addEventListener('click', function() {
+  count++;
+  document.getElementById('out').textContent = 'Button 1 tapped ' + count + ' times';
+});
+document.getElementById('btn2').addEventListener('click', function() {
+  document.getElementById('out').textContent = 'Button 2 worked too';
+});
+document.getElementById('out').textContent = 'JS loaded OK - now tap a button';
+</script>
+</body>
+</html>
