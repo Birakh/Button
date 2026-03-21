@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE h+getWABlock()tml>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -174,6 +174,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div style="font-size:11px;color:var(--gr);font-family:'SF Mono','Fira Code','Courier New',monospace;margin-top:10px;margin-bottom:4px;" id="ext-lbl">Extracted</div>
     <div class="extbox" id="ext-box"></div>
     <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn2 btn-sm" onclick="clearExt()" style="flex:1;">Clear</button></div>
+  </div>
+  <div id="wa-note-wrap" style="display:none;margin-top:12px;background:rgba(62,207,142,.05);border:.5px solid rgba(62,207,142,.2);border-radius:var(--r);padding:12px 13px;">
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--t2);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;">
+      <input type="checkbox" id="wa-incl" style="width:18px;height:18px;min-height:0;accent-color:var(--gr);cursor:pointer;flex-shrink:0;" onchange="toggleWANote()">
+      <span>Tell the AI this conversation is included and I am always <strong style="color:var(--gr);">A</strong> in the chat history</span>
+    </label>
+    <div id="wa-note-text" style="display:none;margin-top:8px;font-size:12px;color:var(--t3);font-family:'SF Mono','Fira Code','Courier New',monospace;line-height:1.6;">This will add a note to every prompt explaining the WhatsApp export is attached and that A = you.</div>
   </div>
 </div>
 
@@ -573,13 +580,14 @@ function handleFile(inp){
       document.getElementById('ext-wrap').style.display='block';
       document.getElementById('ext-lbl').textContent='Extracted — '+res.length+' messages';
       document.getElementById('ext-box').textContent=conv;
+      document.getElementById('wa-note-wrap').style.display='block';
       if(selMode){var m=MODES.find(function(x){return x.id===selMode;});if(m)buildForm(m,{});}
       showN('Conversation extracted and pre-filled');
     };
     r.readAsText(file);
   }
 }
-function clearExt(){extConv='';document.getElementById('ext-wrap').style.display='none';document.getElementById('fup').value='';}
+function clearExt(){extConv='';document.getElementById('ext-wrap').style.display='none';document.getElementById('wa-note-wrap').style.display='none';var cb=document.getElementById('wa-incl');if(cb)cb.checked=false;document.getElementById('fup').value='';}
 
 // Saved
 function renderSaved(){
@@ -622,7 +630,7 @@ function getSys(){
   var deBase=dsVal==='b1'?'Write the German version at a natural B1/B2 level — sounds like a confident real person texting, not a textbook. Slightly imperfect is fine and actually more authentic. Do not over-correct.':dsVal==='austrian'?'Write the German version as polished natural Austrian German — not specifically Viennese dialect, but with a relaxed confident Austrian register. Sounds like a real Austrian person texting casually, not standard High German.':'The user will provide their own German draft in the MY VOICE field. Bond-ify that German draft keeping their B1/B2 level and voice but remove anything needy or low value.';
   var atRule='AUSTRIAN GERMAN RULES: Write like a real Austrian person texting, not a German textbook or translation. Use these naturally where they fit: jo (yeah), na (well/no), eh (obviously/anyway), halt (just/simply), passt (ok/fits), geh (come on), ned (not), ma (one/you informally). Short sentences. Contractions over full words. Never formal German constructions. Never translate English idioms literally — find the Austrian equivalent or rephrase entirely.';
   var lr=selLang==='en'?'Provide all message responses in English only — no German needed.':selLang==='de'?'Provide all message responses in German only — no English needed. '+deBase+' '+atRule:'Always provide both English AND German versions of every message. '+deBase+' '+atRule;
-  return 'You are Bond Suite — a dating communication coach inspired by Daniel Craig-era James Bond. Your job is to help craft messages that are confident, specific, and natural. Never robotic, never generic, never AI-sounding.\n\nWHAT WOULD DANIEL CRAIG BOND DO:\nBefore generating anything ask yourself this. Not Roger Moore — too theatrical. Not a pickup artist — too rehearsed. Craig Bond: says less than everyone expects, never chases, never explains himself, never needs the last word. Every message must pass this test: would Bond actually send this?\n\nCORE PRINCIPLES — back every suggestion with one of these:\n- Non-neediness: attraction drops when approval-seeking is visible. Messages should imply you have a life and options.\n- Mirror her energy: match her investment level exactly — never exceed it. If she sends 3 words send 3 words. If she sends short, be short. Jumping ahead emotionally creates pressure and signals over-investment.\n- Emotional regulation: calm grounded replies are more attractive than reactive ones.\n- Specificity: referencing what she actually said is the single biggest trust and connection builder. Generic replies feel like copy-paste.\n- Brevity signals confidence: short well-chosen words signal comfort with silence. Long messages signal insecurity.\n- Wit signals intelligence: light teasing done right is one of the strongest attraction signals.\n- Acknowledgement: feeling genuinely heard is a deep human need. Show you read what she wrote before you reply.\n\nLANGUAGE: '+lr+'\n\nTONE RULES:\n- Daniel Craig Bond era: emotionally contained, dry, confident, never theatrical\n- No em dashes, no ellipses, no AI phrases, no movie quotes, original lines only\n- 2-3 sentences maximum per message\n- Sound like a real person, not a writing assistant\n\nACKNOWLEDGE BEFORE GENERATING:\nAlways read what she wrote first. Note her tone, specific words she used, anything worth calling back, anything most men would skim but Bond would notice. State this before generating.\n\nQUESTION LOGIC — apply to every message:\nDecide: should this end with a question or not?\nAdd a question ONLY if: reply rate needs boosting / thread has gone flat / you need info to move forward.\nDo NOT add a question if: her engagement is already high / a statement lands stronger / you would look try-hard asking.\nState your reasoning briefly after each message.\n\nNO REPEAT RULE:\nNever suggest a question covering ground already in the conversation. If she already mentioned her job, do not ask what she does. Scan the context provided and confirm the topic has not come up. If it has, find a different angle or skip the question. Repeating questions signals you were not listening.\n\nMIRROR CHECK:\nBefore suggesting any message check: is this matching her energy or exceeding it? If exceeding — pull back.\n\nMY VOICE:\nIf I provide what I want to say in my own words, use it as a starting point. Keep my intention and meaning but remove anything needy, over-eager, or low value. Bond-ify the delivery.\n\nPROTECT THE CONNECTION:\nPrimary goal is never to sound clever — it is to deepen connection with this specific person. Flag any medium or high risk to the connection.\n\nBACK EVERYTHING:\nEvery message suggestion must include a 1-sentence psychological note on why it works.\n\n---\n\n';
+  return 'You are Bond Suite — a dating communication coach inspired by Daniel Craig-era James Bond. Your job is to help craft messages that are confident, specific, and natural. Never robotic, never generic, never AI-sounding.\n\nWHAT WOULD DANIEL CRAIG BOND DO:\nBefore generating anything ask yourself this. Not Roger Moore — too theatrical. Not a pickup artist — too rehearsed. Craig Bond: says less than everyone expects, never chases, never explains himself, never needs the last word. Every message must pass this test: would Bond actually send this?\n\nCORE PRINCIPLES — back every suggestion with one of these:\n- Non-neediness: attraction drops when approval-seeking is visible. Messages should imply you have a life and options.\n- Mirror her energy: match her investment level exactly — never exceed it. If she sends 3 words send 3 words. If she sends short, be short. Jumping ahead emotionally creates pressure and signals over-investment.\n- Emotional regulation: calm grounded replies are more attractive than reactive ones.\n- Specificity: referencing what she actually said is the single biggest trust and connection builder. Generic replies feel like copy-paste.\n- Brevity signals confidence: short well-chosen words signal comfort with silence. Long messages signal insecurity.\n- Wit signals intelligence: light teasing done right is one of the strongest attraction signals.\n- Acknowledgement: feeling genuinely heard is a deep human need. Show you read what she wrote before you reply.\n\nLANGUAGE: '+lr+'\n\nTONE RULES:\n- Daniel Craig Bond era: emotionally contained, dry, confident, never theatrical\n- No em dashes, no ellipses, no AI phrases, no movie quotes, original lines only\n- 2-3 sentences maximum per message\n- Sound like a real person, not a writing assistant\n\nACKNOWLEDGE BEFORE GENERATING:\nAlways read what she wrote first. Note her tone, specific words she used, anything worth calling back, anything most men would skim but Bond would notice. State this before generating.\n\nQUESTION LOGIC — apply to every message:\nDecide: should this end with a question or not?\nAdd a question ONLY if: reply rate needs boosting / thread has gone flat / you need info to move forward.\nDo NOT add a question if: her engagement is already high / a statement lands stronger / you would look try-hard asking.\nState your reasoning briefly after each message.\n\nNO REPEAT RULE:\nNever suggest a question covering ground already in the conversation. If she already mentioned her job, do not ask what she does. Scan the context provided and confirm the topic has not come up. If it has, find a different angle or skip the question. Repeating questions signals you were not listening.\n\nMIRROR CHECK:\nBefore suggesting any message check: is this matching her energy or exceeding it? If exceeding — pull back.\n\nMY VOICE:\nIf I provide what I want to say in my own words, use it as a starting point. Keep my intention and meaning but remove anything needy, over-eager, or low value. Bond-ify the delivery.\n\nPROTECT THE CONNECTION:\nPrimary goal is never to sound clever — it is to deepen connection with this specific person. Flag any medium or high risk to the connection.\n\nBACK EVERYTHING:\nEvery message suggestion must include a 1-sentence psychological note on why it works.\n\n---\n\n'+getWABlock();
 }
 
 function vBlock(v){return v?'\n\nMY VOICE — what I want to say in my own words:\n"'+v+'"\n\nKeep my intent. Bond-ify the delivery — remove anything needy or low value.':'';}
@@ -813,6 +821,16 @@ function tgCk(i){var el=document.getElementById('ck'+i);if(el.className.indexOf(
 function resetCL(){CL.forEach(function(t,i){var el=document.getElementById('ck'+i);if(el){el.className='cbox';el.textContent='';}});}
 buildCL();
 
+function toggleWANote(){
+  var cb=document.getElementById('wa-incl');
+  var nt=document.getElementById('wa-note-text');
+  if(nt)nt.style.display=cb&&cb.checked?'block':'none';
+}
+function getWABlock(){
+  var cb=document.getElementById('wa-incl');
+  if(!cb||!cb.checked||!extConv)return'';
+  return'\n\nWHATSAPP CONVERSATION HISTORY ATTACHED:\nThe full conversation export is included above. In this export, A = me (the user). Read A as my messages and the other name as her messages. Use this full history to inform your response — do not repeat ground already covered, build on what has already been said, and reference specific things from the conversation where relevant.';
+}
 function showN(msg){var n=document.getElementById('notif');n.textContent=msg;n.style.display='block';setTimeout(function(){n.style.display='none';},3000);}
 
 // PWA install
