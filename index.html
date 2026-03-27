@@ -5,19 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
 <meta name="theme-color" content="#0e0e10"/>
 <title>Bond Suite CRM</title>
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-:root{
-  --bg:#0e0e10;--bg2:#17171a;--bg3:#1f1f23;--bg4:#2a2a30;
-  --bo:#2a2a32;--bo2:#3d3d48;
-  --t:#e8e8ec;--t2:#9898a8;--t3:#4a4a58;
-  --ac:#c8a96e;--ac2:#a88848;
-  --gr:#3ecf8e;--rd:#e05c5c;--yl:#e0a84a;--bl:#5c9de0;
-  --r:12px;--rl:16px;--tap:48px;
-}
+:root{--bg:#0e0e10;--bg2:#17171a;--bg3:#1f1f23;--bg4:#2a2a30;--bo:#2a2a32;--bo2:#3d3d48;--t:#e8e8ec;--t2:#9898a8;--t3:#4a4a58;--ac:#c8a96e;--ac2:#a88848;--gr:#3ecf8e;--rd:#e05c5c;--yl:#e0a84a;--bl:#5c9de0;--r:12px;--rl:16px;--tap:48px;}
 html{-webkit-text-size-adjust:100%;}
-body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden; transition: background 0.2s, color 0.2s;}
+body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;}
 .app{max-width:680px;margin:0 auto;padding:20px 16px 100px; display:block;} 
 .hdr{text-align:center;margin-bottom:24px; position:relative; cursor:pointer;}
 .hdr h1{font-size:22px;font-weight:300;letter-spacing:.06em;font-family:'SF Mono',monospace;}
@@ -30,7 +22,7 @@ body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSyste
 .mpane{display:none;} .mpane.on{display:block;}
 label{font-size:13px;color:var(--t2);display:block;margin-bottom:6px;font-family:'SF Mono',monospace;}
 label .op{color:var(--t3);font-weight:300;}
-input:not([type=checkbox]):not([type=file]),textarea,select{width:100%;background:var(--bg3);border:.5px solid var(--bo2);border-radius:var(--r);padding:11px 13px;font-size:15px;color:var(--t);outline:none;transition:border .15s;appearance:none;-webkit-appearance:none;min-height:var(--tap);}input[type=checkbox]{cursor:pointer;}
+input:not([type=checkbox]):not([type=file]),textarea,select{width:100%;background:var(--bg3);border:.5px solid var(--bo2);border-radius:var(--r);padding:11px 13px;font-size:15px;color:var(--t);outline:none;appearance:none;-webkit-appearance:none;min-height:var(--tap);}
 input:focus,textarea:focus,select:focus{border-color:var(--ac);}
 textarea{resize:vertical;min-height:80px;}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239898a8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
@@ -99,15 +91,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .modal-overlay {position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; display:none; align-items:center; justify-content:center; padding:16px;}
 .modal-overlay.on {display:flex;}
 .modal-content {background:var(--bg2); border:1px solid var(--bo); border-radius:var(--rl); padding:20px; width:100%; max-width:400px;}
-
-/* Stealth Mode */
-body.stealth-mode { background: #ffffff !important; color: #111 !important; font-family: 'Arial', sans-serif !important; }
-body.stealth-mode .app { max-width: 100%; padding: 10px; }
-body.stealth-mode .hdr span, body.stealth-mode .hdr p, body.stealth-mode .ctag, body.stealth-mode .tnav-btn, body.stealth-mode .mn, body.stealth-mode .settings-btn { display: none !important; }
-body.stealth-mode .hdr h1 { color: #ccc; font-size: 14px; text-align:left; }
-body.stealth-mode .card, body.stealth-mode .out-wrap { background: #fff !important; border: 1px solid #ddd !important; border-radius: 4px !important; box-shadow: none !important; }
-body.stealth-mode input, body.stealth-mode textarea, body.stealth-mode select { background: #fafafa !important; border: 1px solid #ccc !important; color: #111 !important;}
-body.stealth-mode .btn, body.stealth-mode .btn2 { background: #eee !important; color: #333 !important; border: 1px solid #ccc !important;}
 </style>
 </head>
 <body>
@@ -247,7 +230,7 @@ body.stealth-mode .btn, body.stealth-mode .btn2 { background: #eee !important; c
     </div>
 
     <div class="div" style="margin-top:24px;"></div>
-    <button class="btn btn-danger" onclick="clearData()">Clear All Data</button>
+    <button class="btn btn-danger" onclick="clearData()" style="width:100%;">Clear All Data</button>
   </div>
 </div>
 
@@ -260,10 +243,6 @@ let bondState = { dossier: { name: '', job: '', hobbies: '', pat: '', gistId: ''
 let selMode='', extConv='', currentActiveMatch = null;
 
 window.onload = function() {
-  bootApp();
-};
-
-function bootApp() {
   try {
     const saved = localStorage.getItem('bondVault');
     if (saved) bondState = JSON.parse(saved);
@@ -275,25 +254,22 @@ function bootApp() {
   document.getElementById('dos_pat').value = bondState.dossier.pat || '';
   renderMatches();
   pullFromGist(); 
-}
+};
 
 function saveStateLocally() {
   localStorage.setItem('bondVault', JSON.stringify(bondState));
   renderMatches();
 }
 
-// ==== CLOUD SYNC (GIST) AUTO-MANAGED ====
+// ==== CLOUD SYNC ====
 async function testGithubConnection() {
   let pat = document.getElementById('dos_pat').value.trim() || bondState.dossier.pat;
   if (!pat) { showN('No GitHub PAT provided.'); return; }
-
   showN('Testing connection...');
   try {
     const headers = { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json' };
     const response = await fetch('https://api.github.com/gists', { headers });
-
     if (response.status === 401) { showN('❌ Error: Invalid PAT (Unauthorized).'); return; }
-
     if (response.ok) {
       const gists = await response.json();
       const existing = gists.find(g => g.description === 'Bond_Suite_Vault_Do_Not_Delete' || (g.files && g.files['bond-crm.json']));
@@ -320,10 +296,8 @@ async function forceGistSync() {
       if (listRes.ok) {
         const gists = await listRes.json();
         const existing = gists.find(g => g.description === 'Bond_Suite_Vault_Do_Not_Delete' || (g.files && g.files['bond-crm.json']));
-        
-        if (existing) {
-          gistId = existing.id;
-        } else {
+        if (existing) { gistId = existing.id; } 
+        else {
           const createRes = await fetch('https://api.github.com/gists', {
             method: 'POST', headers,
             body: JSON.stringify({
@@ -386,19 +360,15 @@ async function pullFromGist() {
 // ==== CLEAR DATA ====
 async function clearData() {
   if(!confirm("WARNING: This will permanently delete your local data AND your cloud backup on GitHub. Proceed?")) return;
-
   const {pat, gistId} = bondState.dossier;
   if(pat && gistId) {
     try { await fetch(`https://api.github.com/gists/${gistId}`, { method: 'DELETE', headers: { 'Authorization': `token ${pat}` } }); } 
     catch(e) { console.error("Failed to delete cloud gist"); }
   }
-
   localStorage.removeItem('bondVault');
   bondState = { dossier: { name: '', job: '', hobbies: '', pat: '', gistId: '' }, matches: [], archive: [] };
-  
   document.getElementById('dos_name').value = ''; document.getElementById('dos_job').value = '';
   document.getElementById('dos_hobbies').value = ''; document.getElementById('dos_pat').value = '';
-  
   renderMatches(); toggleDossier(); showN('All data wiped.');
 }
 
@@ -413,18 +383,6 @@ function saveDossier() {
   bondState.dossier.pat = document.getElementById('dos_pat').value.trim();
   saveStateLocally(); forceGistSync(); toggleDossier(); showN('Dossier saved & Pushed...');
 }
-
-// ==== STEALTH MODE ====
-let lastTap = 0;
-document.getElementById('main-hdr').addEventListener('click', function(e) {
-  let currentTime = new Date().getTime();
-  let tapLength = currentTime - lastTap;
-  if (tapLength < 500 && tapLength > 0) {
-    document.body.classList.toggle('stealth-mode');
-    showN(document.body.classList.contains('stealth-mode') ? 'Stealth Engaged' : 'Stealth Disabled');
-  }
-  lastTap = currentTime;
-});
 
 // ==== MATCH MANAGEMENT ====
 function showNewMatchUI() { document.getElementById('new-match-ui').style.display = 'block'; }
@@ -521,7 +479,7 @@ function handleFile(inp){
 }
 function clearExt(){extConv='';document.getElementById('ext-wrap').style.display='none'; document.getElementById('fup').value=''; document.getElementById('pacing-tracker').style.display='none';}
 
-// ==== CORE MODES (38 MODES) ====
+// ==== MODES ====
 var MODES=[
   {id:'bond_reply',n:'Bond Reply',s:'She sent a message',i:'01',v:true,f:['her_msg','platform','stage','subtext','her_vibe','time_since','context']},
   {id:'bondify',n:'Bond-ify',s:'Rewrite my draft',i:'02',v:false,f:['my_draft','platform','stage']},
@@ -564,62 +522,39 @@ var MODES=[
 ];
 
 var FLD={
-  her_msg:{l:'Her message/post',t:'ta',p:'Paste what she sent or posted...'},
-  my_draft:{l:'Your draft',t:'ta',p:'Paste what you were going to send...'},
-  her_bio:{l:'Her bio / profile',t:'ta',p:'e.g. Loves hiking, works in architecture...'},
-  conv:{l:'Conversation',t:'ta',p:'Paste the full conversation...',rows:7},
-  my_last:{l:'Your last message',t:'ta',p:'What did you last send?'},
-  last_inter:{l:'Where you left off',t:'ta',p:'Describe or paste the last messages...'},
-  my_facts:{l:'About you',t:'ta',p:'e.g. Software engineer in Vienna...'},
-  her_int:{l:'Her interests',t:'ta',p:'e.g. Likes art, good food...'},
-  fd_ctx:{l:'Context',t:'ta',p:'e.g. Meeting for coffee Saturday at 3pm',rows:2},
-  can_msg:{l:'What she said',t:'ta',p:'e.g. I might be busy, let you know...'},
-  context:{l:'Context',t:'ta',p:'Optional — last few messages...',opt:true,rows:2},
-  ai_resp:{l:'The AI reply you got',t:'ta',p:'Paste the message the AI generated...',rows:4},
-  orig_ctx:{l:'Original context',t:'ta',p:'What was the conversation about...'},
-  photo_desc:{l:'Describe her photos',t:'ta',p:'e.g. First photo hiking in mountains...'},
-  th_goal:{l:'Where you want this to go',t:'ta',p:'e.g. Move to suggesting a date...',rows:2},
-  date_ctx:{l:'How the date/night went',t:'ta',p:'e.g. Had coffee for 2 hours...'},
-  platform:{l:'Platform',t:'sel',o:['Tinder','Bumble','WhatsApp','Hinge','IG']},
-  stage:{l:'Stage',t:'sel',o:['Opening / first messages','Just matched','Getting to know each other','5-10 messages in','Past the small talk','Suggesting a date','Post first date','Deeper conversation','Been talking weeks','Deeper / personal']},
-  opener_style:{l:'Style',t:'sel',o:['Witty and specific','Calm and curious','Lightly flirtatious','Short and confident']},
-  days_talking:{l:'Days talking',t:'sel',o:['1-2 days','3-5 days','About a week','2+ weeks','A month+']},
-  days_since:{l:'Days since',t:'sel',o:['1 day','2 days','3 days','5 days','A week+']},
-  vibe:{l:'How was it going?',t:'sel',o:['Really well','Decent','A bit flat','Had agreed on a date']},
-  vibe_bef:{l:'Vibe before',t:'sel',o:['Really well','Decent','A bit slow']},
-  quiet_dur:{l:'How long quiet',t:'sel',o:['2-3 days','About a week','2 weeks','1-2 months','3+ months']},
+  her_msg:{l:'Her message/post',t:'ta',p:'Paste what she sent...'},my_draft:{l:'Your draft',t:'ta',p:'Paste what you were going to send...'},
+  her_bio:{l:'Her bio / profile',t:'ta',p:'e.g. Loves hiking, works in architecture...'},conv:{l:'Conversation',t:'ta',p:'Paste the full conversation...',rows:7},
+  my_last:{l:'Your last message',t:'ta',p:'What did you last send?'},last_inter:{l:'Where you left off',t:'ta',p:'Describe or paste the last messages...'},
+  my_facts:{l:'About you',t:'ta',p:'e.g. Software engineer in Vienna...'},her_int:{l:'Her interests',t:'ta',p:'e.g. Likes art, good food...'},
+  fd_ctx:{l:'Context',t:'ta',p:'e.g. Meeting for coffee Saturday at 3pm',rows:2},can_msg:{l:'What she said',t:'ta',p:'e.g. I might be busy, let you know...'},
+  context:{l:'Context',t:'ta',p:'Optional — last few messages...',opt:true,rows:2},ai_resp:{l:'The AI reply you got',t:'ta',p:'Paste the message the AI generated...',rows:4},
+  orig_ctx:{l:'Original context',t:'ta',p:'What was the conversation about...'},photo_desc:{l:'Describe her photos',t:'ta',p:'e.g. First photo hiking in mountains...'},
+  th_goal:{l:'Where you want this to go',t:'ta',p:'e.g. Move to suggesting a date...',rows:2},date_ctx:{l:'How the date/night went',t:'ta',p:'e.g. Had coffee for 2 hours...'},
+  platform:{l:'Platform',t:'sel',o:['Tinder','Bumble','WhatsApp','Hinge','IG']},stage:{l:'Stage',t:'sel',o:['Opening / first messages','Just matched','Getting to know each other','5-10 messages in','Past the small talk','Suggesting a date','Post first date','Deeper conversation','Been talking weeks','Deeper / personal']},
+  opener_style:{l:'Style',t:'sel',o:['Witty and specific','Calm and curious','Lightly flirtatious','Short and confident']},days_talking:{l:'Days talking',t:'sel',o:['1-2 days','3-5 days','About a week','2+ weeks','A month+']},
+  days_since:{l:'Days since',t:'sel',o:['1 day','2 days','3 days','5 days','A week+']},vibe:{l:'How was it going?',t:'sel',o:['Really well','Decent','A bit flat','Had agreed on a date']},
+  vibe_bef:{l:'Vibe before',t:'sel',o:['Really well','Decent','A bit slow']},quiet_dur:{l:'How long quiet',t:'sel',o:['2-3 days','About a week','2 weeks','1-2 months','3+ months']},
   what_hap:{l:'What happened',t:'sel',o:['She unmatched','She ghosted','Stopped after a date', 'I made a bad joke', 'I forgot to reply', 'I got too intense']},
   fd_sit:{l:'Situation',t:'sel',o:['Suggesting the first date','Confirming plans (day before)','Day of the date','Morning after it went well','She went quiet after the date']},
-  can_tim:{l:'How far out',t:'sel',o:['Same day','Day before','A few days before']},
-  num_sit:{l:'Situation',t:'sel',o:['I want to ask for her number','She just gave me her number','She asked for mine']},
+  can_tim:{l:'How far out',t:'sel',o:['Same day','Day before','A few days before']},num_sit:{l:'Situation',t:'sel',o:['I want to ask for her number','She just gave me her number','She asked for mine']},
   fm_type:{l:'What she did',t:'sel',o:['Suggested a date','Was very forward / flirty','Asked me out directly','Said she likes me']},
   ex_how:{l:'How it came up',t:'sel',o:['Casually in passing','Still seems to think about him','Comparing me to him','Venting about him']},
   cp_type:{l:'Type',t:'sel',o:['Appearance','Personality / vibe','Something I said or did','Called me different / rare']},
-  mn_type:{l:'Type',t:'sel',o:['Good morning','Good night','Checking in during the day']},
-  mn_stage:{l:'Stage',t:'sel',o:['Just matched','Talking a few days','About to go on a first date','Been on 1-2 dates']},
-  bio_len:{l:'Length',t:'sel',o:['Short (2-3 lines)','Medium (4-5 lines)']},
-  budget:{l:'Budget',t:'sel',o:['Casual (coffee, walk)','Mid-range (drinks, dinner)','Higher end']},
-  ad_time:{l:'When are you sending?',t:'sel',o:['Morning after the date','Afternoon after the date','Day after']},
-  vp_dur:{l:'How long this has been happening',t:'sel',o:['Just started','A few days','Over a week','From the start']},
+  mn_type:{l:'Type',t:'sel',o:['Good morning','Good night','Checking in during the day']},mn_stage:{l:'Stage',t:'sel',o:['Just matched','Talking a few days','About to go on a first date','Been on 1-2 dates']},
+  bio_len:{l:'Length',t:'sel',o:['Short (2-3 lines)','Medium (4-5 lines)']},budget:{l:'Budget',t:'sel',o:['Casual (coffee, walk)','Mid-range (drinks, dinner)','Higher end']},
+  ad_time:{l:'When are you sending?',t:'sel',o:['Morning after the date','Afternoon after the date','Day after']},vp_dur:{l:'How long this has been happening',t:'sel',o:['Just started','A few days','Over a week','From the start']},
   wc_when:{l:'When it changed',t:'sel',o:['After I said something specific','Out of nowhere','After we agreed to meet','After a really good chat']},
   st_type:{l:'What kind of test',t:'sel',o:['Challenging something I said','Ignoring me after being warm','Saying something provocative','Testing if I will chase','Comparing me to other guys']},
-  city:{l:'City',t:'txt',p:'e.g. Vienna'},
-  quiet_why:{l:'Why you went quiet',t:'chips',o:['Work got busy','Was travelling','Personal stuff','Just lost track','Seeing someone else','Not sure about her','Felt the vibe drop'],custom:true},
+  city:{l:'City',t:'txt',p:'e.g. Vienna'},quiet_why:{l:'Why you went quiet',t:'chips',o:['Work got busy','Was travelling','Personal stuff','Just lost track','Seeing someone else','Not sure about her','Felt the vibe drop'],custom:true},
   subtext:{l:'Her message subtext',t:'chips',o:['Literal / just communicating','Playful tease','Sarcasm','Shit test','Testing my interest','Flirting','Hard to read / not sure'],opt:true},
-  her_vibe:{l:'Her vibe / bio impression',t:'ta',p:'Optional — e.g. seems playful and sarcastic...',opt:true,rows:2},
-  time_since:{l:'Time since her last message',t:'sel',o:['Just now','Under an hour','A few hours','Half a day','One day','2-3 days','A week+'],opt:true},
-  wb_sit:{l:'Describe the situation',t:'ta',p:'e.g. She cancelled last minute...'},
-  wb_ctx:{l:'Any extra context',t:'ta',p:'Optional — anything else relevant...',opt:true,rows:2},
-  fdp_conv:{l:'Paste your conversation',t:'ta',p:'Paste the full chat so the AI knows her...',rows:7},
-  fdp_idea:{l:'Your date idea',t:'ta',p:'e.g. Thinking dinner at a small Italian place...'},
-  fdp_location:{l:'City / area',t:'txt',p:'e.g. Vienna, 1st district'},
-  fdp_ctx:{l:'Anything else to factor in',t:'ta',p:'e.g. First date, she seemed nervous...',opt:true,rows:2},
-  her_name:{l:'Her name',t:'txt',p:'e.g. Sara',opt:true},
-  last_met:{l:'Last time you met in person',t:'sel',o:['Never met yet','Today / yesterday','A few days ago','About a week ago','2+ weeks ago','A month or more'],opt:true},
-  mood:{l:'Overall conversation mood',t:'chips',o:['Just started','Dying / going flat','Holding steady','Warm and good','Really great energy'],opt:true},
+  her_vibe:{l:'Her vibe / bio impression',t:'ta',p:'Optional — e.g. seems playful and sarcastic...',opt:true,rows:2},time_since:{l:'Time since her last message',t:'sel',o:['Just now','Under an hour','A few hours','Half a day','One day','2-3 days','A week+'],opt:true},
+  wb_sit:{l:'Describe the situation',t:'ta',p:'e.g. She cancelled last minute...'},wb_ctx:{l:'Any extra context',t:'ta',p:'Optional — anything else relevant...',opt:true,rows:2},
+  fdp_conv:{l:'Paste your conversation',t:'ta',p:'Paste the full chat so the AI knows her...',rows:7},fdp_idea:{l:'Your date idea',t:'ta',p:'e.g. Thinking dinner at a small Italian place...'},
+  fdp_location:{l:'City / area',t:'txt',p:'e.g. Vienna, 1st district'},fdp_ctx:{l:'Anything else to factor in',t:'ta',p:'e.g. First date, she seemed nervous...',opt:true,rows:2},
+  her_name:{l:'Her name',t:'txt',p:'e.g. Sara',opt:true},last_met:{l:'Last time you met in person',t:'sel',o:['Never met yet','Today / yesterday','A few days ago','About a week ago','2+ weeks ago','A month or more'],opt:true},
+  mood:{l:'Overall conversation mood',t:'chips',o:['Just started','Dying / going flat','Holding steady','Warm and good','Really great energy'],opt:true}
 };
 
-// Form Builder
 function tgChip(el){el.className=el.className.indexOf(' on')>=0?'chip':'chip on';}
 function buildForm(m,pre){
   var f=document.getElementById('dyn-form');f.innerHTML='';
@@ -649,7 +584,6 @@ function buildForm(m,pre){
     }
     f.appendChild(w);
   });
-  
   if(m.v){
     var vw=document.createElement('div');vw.className='vbox row';
     vw.innerHTML='<label>What I want to say — in my own words <span class="op">(optional)</span></label><textarea id="f_voice" rows="2" placeholder="e.g. I want to say I think she is interesting...">'+eH(pre.voice||'')+'</textarea><div class="vhint">Write naturally — it will be Bond-ified</div>';
@@ -680,7 +614,6 @@ function filterModes(q){
   });
 }
 
-// Build Mode Grid
 (function(){
   var g=document.getElementById('mode-grid');
   MODES.forEach(function(m){
@@ -703,11 +636,40 @@ function selMode2(id,pre){
   setTimeout(function(){document.getElementById('form-card').scrollIntoView({behavior:'smooth',block:'start'});},80);
 }
 
-// Prompt Generation Logic
+// ==== STRICT BOND PROMPT ====
 function getSys(){
   let dosText = "";
-  if (bondState.dossier.name) dosText = `\nUSER IDENTITY:\nName: ${bondState.dossier.name}\nJob: ${bondState.dossier.job}\nVibe: ${bondState.dossier.hobbies}\n`;
-  return 'You are Bond Suite — a dating communication coach inspired by Daniel Craig-era James Bond.'+dosText+'\n\nWHAT WOULD DANIEL CRAIG BOND DO:\nBefore generating ask yourself this. Craig Bond says less than expected, never chases, never explains himself. Every message must pass this test.\n\nCORE PRINCIPLES:\n- Non-neediness: imply you have a life and options.\n- Mirror her energy: match her investment level exactly.\n- Emotional regulation: calm grounded replies.\n- Specificity: reference what she actually said.\n- Brevity signals confidence: short well-chosen words.\n\nTONE RULES:\n- Emotionally contained, dry, confident\n- No em dashes, ellipses, AI phrases, or movie quotes\n- 2-3 sentences max\n\nQUESTION LOGIC: Only ask a question if thread has gone flat or you need info. Never repeat questions.';
+  if (bondState.dossier.name) dosText = `\nUSER IDENTITY (Inject this naturally into responses where relevant):\nName: ${bondState.dossier.name}\nJob: ${bondState.dossier.job}\nVibe: ${bondState.dossier.hobbies}\n`;
+  return 'You are Bond Suite — a dating communication coach inspired by Daniel Craig-era James Bond. Your job is to help craft messages that are confident, specific, and natural. Never robotic, never generic, never AI-sounding.'+dosText+
+  '\n\nWHAT WOULD DANIEL CRAIG BOND DO:\nBefore generating anything ask yourself this. Not Roger Moore — too theatrical. Not a pickup artist — too rehearsed. Craig Bond: says less than everyone expects, never chases, never explains himself, never needs the last word. Every message must pass this test: would Bond actually send this?\n\n'+
+  'CORE PRINCIPLES — back every suggestion with one of these:\n'+
+  '- Non-neediness: attraction drops when approval-seeking is visible. Messages should imply you have a life and options.\n'+
+  '- Mirror her energy: match her investment level exactly — never exceed it. If she sends 3 words send 3 words. If she sends short, be short. Jumping ahead emotionally creates pressure and signals over-investment.\n'+
+  '- Emotional regulation: calm grounded replies are more attractive than reactive ones.\n'+
+  '- Specificity: referencing what she actually said is the single biggest trust and connection builder. Generic replies feel like copy-paste.\n'+
+  '- Brevity signals confidence: short well-chosen words signal comfort with silence. Long messages signal insecurity.\n'+
+  '- Wit signals intelligence: light teasing done right is one of the strongest attraction signals.\n'+
+  '- Acknowledgement: feeling genuinely heard is a deep human need. Show you read what she wrote before you reply.\n\n'+
+  'TONE RULES:\n'+
+  '- Daniel Craig Bond era: emotionally contained, dry, confident, never theatrical\n'+
+  '- No em dashes, no ellipses, no AI phrases (e.g., "that sounds amazing", "absolutely"), no movie quotes, original lines only\n'+
+  '- 2-3 sentences maximum per message\n'+
+  '- Sound like a real person, not a writing assistant\n\n'+
+  'ACKNOWLEDGE BEFORE GENERATING:\n'+
+  'Always read what she wrote first. Note her tone, specific words she used, anything worth calling back, anything most men would skim but Bond would notice. State this before generating.\n\n'+
+  'QUESTION LOGIC — apply to every message:\n'+
+  'Decide: should this end with a question or not?\n'+
+  'Add a question ONLY if: reply rate needs boosting / thread has gone flat / you need info to move forward.\n'+
+  'Do NOT add a question if: her engagement is already high / a statement lands stronger / you would look try-hard asking.\n'+
+  'State your reasoning briefly after each message.\n\n'+
+  'NO REPEAT RULE:\n'+
+  'Never suggest a question covering ground already in the conversation. If she already mentioned her job, do not ask what she does. Scan the context provided and confirm the topic has not come up. If it has, find a different angle or skip the question. Repeating questions signals you were not listening.\n\n'+
+  'MIRROR CHECK:\n'+
+  'Before suggesting any message check: is this matching her energy or exceeding it? If exceeding — pull back.\n\n'+
+  'PROTECT THE CONNECTION:\n'+
+  'Primary goal is never to sound clever — it is to deepen connection with this specific person. Flag any medium or high risk to the connection.\n\n'+
+  'BACK EVERYTHING:\n'+
+  'Every message suggestion must include a 1-sentence psychological note on why it works.';
 }
 
 function vBlock(v){return v?'\n\nMY VOICE — what I want to say in my own words:\n"'+v+'"\n\nKeep my intent. Bond-ify the delivery — remove anything needy or low value.':'';}
@@ -716,48 +678,48 @@ function tmBlock(){var t=gv('time_since');return(t&&t!=='Just now')?'\nTime sinc
 function vbBlock(){var v=gv('her_vibe');return v?'\n\nHer vibe / bio impression: '+v:'';}
 function nmBlock(){var n=gv('her_name');return n?' Address her as '+n+' where it fits naturally.':'';}
 function moodBlock(){var m=gv('mood');return m&&m!=='Just started'&&m!=='not specified'?'\n\nConversation mood so far: '+m+'.':'';}
-function lmBlock(){var lm=gv('last_met');return lm&&lm!=='Never met yet'?'\n\nLast met in person: '+lm+'.':'';}
+function lmBlock(){var lm=gv('last_met');return lm&&lm!=='Never met yet'&&lm!=='not specified'?'\n\nLast met in person: '+lm+'.':'';}
 
 function getModeP(id,v){
   var S=getSys();
-  if(id==='bond_reply')return S+'\nMODE: BOND REPLY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+nmBlock()+moodBlock()+lmBlock()+tmBlock()+vbBlock()+stBlock()+'\n\nHer message:\n"'+gv('her_msg')+'"'+(gv('context')?'\n\nContext:\n'+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Read her message. Note specific details to call back.\n2. MIRROR CHECK: match her investment level.\n3. Generate 4 reply styles: Calm / Short / Warm / Flirtatious.\n4. For each: message, psych note, Question Logic.\n5. Flag connection risks.';
-  if(id==='bondify')return S+'\nMODE: BOND-IFY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+'\n\nMy draft:\n"'+gv('my_draft')+'"\n\nInstructions:\n1. Diagnose the core problem in 1 sentence.\n2. Rewrite as Bond. Show original phrase, Bond version, psych reason.\n3. Question Logic decision.';
-  if(id==='presend')return S+'\nMODE: PRE-SEND CHECK\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+'\n\nMessage about to send:\n"'+gv('my_draft')+'"\n\nInstructions:\n1. Scores: Confidence 0-10 / Neediness 0-10 / Length.\n2. Mirror check.\n3. Issues & fixes.\n4. Improved version if needed.';
-  if(id==='opener')return S+'\nMODE: OPENER\n\nPlatform: '+gv('platform')+'\nStyle: '+gv('opener_style')+'\n\nHer profile:\n'+gv('her_bio')+vBlock(v)+'\n\nInstructions:\n1. Note 3 specific details most men ignore.\n2. Generate 3 specific openers based on those details.\n3. For each: message, detail used, why it works.';
-  if(id==='tone_reader')return S+'\nMODE: TONE READER\n\nHer message:\n"'+gv('her_msg')+'"'+moodBlock()+lmBlock()+tmBlock()+vbBlock()+(gv('subtext')&&gv('subtext')!=='not specified'?'\nUser suspects subtext: '+gv('subtext'):'')+(gv('context')?'\n\nContext:\n'+gv('context'):'')+'\n\nInstructions:\n1. Signal level & confidence.\n2. Psych reasoning.\n3. Specific tell in her words.\n4. Suggested approach.';
-  if(id==='red_flags')return S+'\nMODE: RED FLAGS\n\nDays talking: '+gv('days_talking')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Note energy shifts.\n2. Overall rating: green/yellow/red.\n3. Identify specific patterns and whether to address them.';
-  if(id==='escalation')return S+'\nMODE: ESCALATION CHECK\n\nDays talking: '+gv('days_talking')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Pace check.\n2. Mirror assessment.\n3. Specific next move with psych justification.';
-  if(id==='followup')return S+'\nMODE: FOLLOW-UP\n\nDays since: '+gv('days_since')+'\nVibe: '+gv('vibe')+moodBlock()+lmBlock()+'\n\nMy last message:\n"'+gv('my_last')+'"'+vBlock(v)+'\n\nInstructions:\n1. Verdict: send / wait.\n2. Message if sending.\n3. What to avoid.';
-  if(id==='reengage')return S+'\nMODE: RE-ENGAGE\n\nQuiet for: '+gv('quiet_dur')+'\nReasons: '+gv('quiet_why')+'\nVibe before: '+gv('vibe_bef')+lmBlock()+'\n\nLast interaction:\n'+gv('last_inter')+vBlock(v)+'\n\nInstructions:\n1. Verdict: reach out / leave it.\n2. If reaching out: acknowledge gap without over-explaining.\n3. One thing that would ruin it.';
-  if(id==='unmatch')return S+'\nMODE: UNMATCH ANALYSIS\n\nWhat happened: '+gv('what_hap')+'\n\nLast messages:\n'+gv('conv')+'\n\nInstructions:\n1. Moment it shifted.\n2. What likely happened.\n3. 2-3 concrete lessons.';
-  if(id==='first_date')return S+'\nMODE: FIRST DATE TEXT\n\nSituation: '+gv('fd_sit')+'\nPlatform: '+gv('platform')+'\nContext: '+gv('fd_ctx')+nmBlock()+vBlock(v)+'\n\nInstructions:\n1. Psychology of this moment.\n2. Generate 2 options. Why they work. Question Logic.';
-  if(id==='cancelled')return S+'\nMODE: SHE CANCELLED\n\nHow far out: '+gv('can_tim')+'\nVibe: '+gv('vibe')+'\n\nWhat she said:\n"'+gv('can_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. Read the cancellation tone.\n2. Three strategies: Confident reschedule / Cool / Light.\n3. Which fits best.';
-  if(id==='number')return S+'\nMODE: NUMBER EXCHANGE\n\nSituation: '+gv('num_sit')+'\nPlatform: '+gv('platform')+(gv('context')?'\nContext: '+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Why framing matters here.\n2. Two message options. What they signal.';
-  if(id==='first_move')return S+'\nMODE: FIRST MOVE\n\nWhat she did: '+gv('fm_type')+'\nPlatform: '+gv('platform')+'\n\nWhat she said:\n"'+gv('her_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. Frame analysis.\n2. Two responses to keep you in the driver seat.';
-  if(id==='ex_mention')return S+'\nMODE: EX MENTION\n\nHow: '+gv('ex_how')+'\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('her_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. The specific trap men fall into here.\n2. Two responses signaling security.';
-  if(id==='compliment')return S+'\nMODE: COMPLIMENT\n\nType: '+gv('cp_type')+'\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('her_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. Why deflecting fails.\n2. Three options to accept confidently.';
-  if(id==='morning')return S+'\nMODE: MORNING/NIGHT TEXT\n\nType: '+gv('mn_type')+'\nStage: '+gv('mn_stage')+(gv('context')?'\nContext: '+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Psychological risk check.\n2. Three options: minimal to warmer.';
-  if(id==='starters')return S+'\nMODE: STARTERS\n\nStage: '+gv('stage')+'\n\nAbout her:\n'+gv('her_bio')+'\n\nInstructions:\n1. Generate 5 conversation angles based on bio details. Do not use generic questions.';
-  if(id==='photo')return S+'\nMODE: PHOTO ANALYSER\n\nPlatform: '+gv('platform')+'\n\nHer photos:\n'+gv('photo_desc')+'\n\nInstructions:\n1. Read photos as signals (values/personality).\n2. 3 conversation angles referencing details most ignore.';
-  if(id==='eval')return S+'\nMODE: RESPONSE EVALUATOR\n\nOriginal context:\n'+gv('orig_ctx')+'\n\nAI reply:\n"'+gv('ai_resp')+'"\n\nInstructions:\n1. Rate Naturalness/Neediness.\n2. List AI tells.\n3. Improved human version.';
-  if(id==='thread')return S+'\nMODE: THREAD BUILDER\n\nPlatform: '+gv('platform')+'\nCurrent stage: '+gv('stage')+'\nGoal: '+gv('th_goal')+'\n\nHer last message:\n"'+gv('her_msg')+'"\n\nInstructions:\n1. Map out sequence of 3-4 messages to goal.\n2. For each: what to say, why, mirror check.';
-  if(id==='summariser')return S+'\nMODE: CONVERSATION SUMMARISER\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. State of the dynamic.\n2. Her personality read.\n3. Topics covered (don\'t repeat).\n4. Next move.';
-  if(id==='shit_test')return S+"\nMODE: SHE IS TESTING ME\n\nType: "+gv('st_type')+'\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('her_msg')+'"'+(gv('context')?'\nContext:\n'+gv('context'):'')+vBlock(v)+"\n\nInstructions:\n1. Identify test core.\n2. What most men do wrong.\n3. 3 responses: Calm / Humour / Reframe.";
-  if(id==='went_cold')return S+'\nMODE: SHE WENT COLD\n\nWhen: '+gv('wc_when')+'\nDays talking: '+gv('days_talking')+vBlock(v)+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Diagnosis.\n2. Worth addressing?\n3. Messages to lightly acknowledge vs ignore.';
-  if(id==='slow_down')return S+'\nMODE: SLOW DOWN\n\nStage: '+gv('stage')+vBlock(v)+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Why slowing down raises value.\n2. Tactical approach to pull back without confusing her.';
-  if(id==='after_date')return S+'\nMODE: AFTER GREAT DATE\n\nTiming: '+gv('ad_time')+'\nPlatform: '+gv('platform')+nmBlock()+lmBlock()+vBlock(v)+'\n\nHow it went:\n'+gv('date_ctx')+'\n\nInstructions:\n1. Psychology of post-date window.\n2. 3 options: minimal / warm / warmer.';
-  if(id==='vague_plans')return S+'\nMODE: VAGUE ABOUT PLANS\n\nDuration: '+gv('vp_dur')+'\nStage: '+gv('stage')+vBlock(v)+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Diagnose: genuine vs soft-no vs test.\n2. Verdict: push once or back off.\n3. Messages for both routes.';
-  if(id==='bio')return S+'\nMODE: BIO WRITER\n\nPlatform: '+gv('platform')+'\nLength: '+gv('bio_len')+'\n\nAbout me:\n'+gv('my_facts')+'\n\nInstructions:\n1. Write confident bio. No cliches.\n2. Explain psychological impression.';
-  if(id==='date_ideas')return S+'\nMODE: DATE IDEAS\n\nCity: '+gv('city')+'\nBudget: '+gv('budget')+'\n\nHer interests:\n'+gv('her_int')+'\n\nInstructions:\n1. 3 specific date ideas for this city.\n2. Bond-style suggestion lines.';
-  if(id==='what_bond')return S+'\nMODE: WHAT WOULD BOND DO\n\nSituation:\n'+gv('wb_sit')+(gv('wb_ctx')?'\n\nContext:\n'+gv('wb_ctx'):'')+'\n\nInstructions:\n1. What is really happening?\n2. What would Bond do/say (mindset).\n3. Generate message EN+DE or explain silence.';
-  if(id==='first_date_planner')return S+'\nMODE: FIRST DATE PLANNER\n\nCity: '+gv('fdp_location')+(gv('fdp_ctx')?'\nExtra context: '+gv('fdp_ctx'):'')+'\n\nYour idea:\n'+gv('fdp_idea')+'\n\nConversation:\n'+gv('fdp_conv')+'\n\nInstructions:\n1. List 5 things she revealed.\n2. Assess date idea fit.\n3. 5 conversation threads to use.\n4. Date arc energy guidelines.';
-  if(id==='ghost_resurrection')return S+'\nMODE: GHOST RESURRECTION\n\nQuiet duration: '+gv('quiet_dur')+'\nPlatform: '+gv('platform')+'\n\nLast conversation:\n'+gv('conv')+vBlock(v)+'\n\nInstructions:\n1. Why ghosts happen.\n2. 2-3 specific lines that assume comfort and skip the small talk.';
-  if(id==='apology')return S+'\nMODE: THE APOLOGY\n\nWhat happened: '+gv('what_hap')+'\nStage: '+gv('stage')+vBlock(v)+'\n\nInstructions:\n1. How to apologize without groveling.\n2. 2 message options that own the mistake and maintain frame.';
-  if(id==='social_media')return S+'\nMODE: IG/SOCIAL MOVE\n\nPlatform: '+gv('platform')+'\n\nHer post/story:\n'+gv('her_msg')+vBlock(v)+'\n\nInstructions:\n1. The trap of complimenting looks on IG.\n2. 3 short, specific replies that stand out from the DMs.';
-  if(id==='flake_handling')return S+'\nMODE: FLAKE HANDLER\n\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('can_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. The difference between maybe and yes.\n2. 2 responses that cleanly withdraw the offer and maintain value.';
-  if(id==='banter_escalation')return S+'\nMODE: BANTER ESCALATOR\n\nStage: '+gv('stage')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Diagnose the current platonic level.\n2. 3 ways to introduce playful friction or tension to escalate the vibe.';
-  if(id==='post_hookup')return S+'\nMODE: POST-INTIMACY\n\nStage: '+gv('stage')+'\n\nHow it went:\n'+gv('date_ctx')+vBlock(v)+'\n\nInstructions:\n1. The psychology of the morning after.\n2. 2-3 calm, securing messages that establish the new dynamic without pressure.';
-  if(id==='post_mortem')return S+'\nMODE: POST-MORTEM ANALYSIS\n\nChat History:\n'+gv('conv')+'\n\nInstructions:\n1. Identify exact moment the energy died.\n2. Diagnose core mistake.\n3. Give one actionable rule for the next match.';
+  if(id==='bond_reply')return S+'\n\nMODE: BOND REPLY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+nmBlock()+moodBlock()+lmBlock()+tmBlock()+vbBlock()+stBlock()+'\n\nHer message:\n"'+gv('her_msg')+'"'+(gv('context')?'\n\nContext:\n'+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Read her message. Note specific details to call back.\n2. MIRROR CHECK: match her investment level.\n3. Generate 4 reply styles: Calm / Short / Warm / Flirtatious.\n4. For each: message, psych note, Question Logic.\n5. Flag connection risks.';
+  if(id==='bondify')return S+'\n\nMODE: BOND-IFY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+'\n\nMy draft:\n"'+gv('my_draft')+'"\n\nInstructions:\n1. Diagnose the core problem in 1 sentence.\n2. Rewrite as Bond. Show original phrase, Bond version, psych reason.\n3. Question Logic decision.';
+  if(id==='presend')return S+'\n\nMODE: PRE-SEND CHECK\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+'\n\nMessage about to send:\n"'+gv('my_draft')+'"\n\nInstructions:\n1. Scores: Confidence 0-10 / Neediness 0-10 / Length.\n2. Mirror check.\n3. Issues & fixes.\n4. Improved version if needed.';
+  if(id==='opener')return S+'\n\nMODE: OPENER\n\nPlatform: '+gv('platform')+'\nStyle: '+gv('opener_style')+'\n\nHer profile:\n'+gv('her_bio')+vBlock(v)+'\n\nInstructions:\n1. Note 3 specific details most men ignore.\n2. Generate 3 specific openers based on those details.\n3. For each: message, detail used, why it works.';
+  if(id==='tone_reader')return S+'\n\nMODE: TONE READER\n\nHer message:\n"'+gv('her_msg')+'"'+moodBlock()+lmBlock()+tmBlock()+vbBlock()+(gv('subtext')&&gv('subtext')!=='not specified'?'\nUser suspects subtext: '+gv('subtext'):'')+(gv('context')?'\n\nContext:\n'+gv('context'):'')+'\n\nInstructions:\n1. Signal level & confidence.\n2. Psych reasoning.\n3. Specific tell in her words.\n4. Suggested approach.';
+  if(id==='red_flags')return S+'\n\nMODE: RED FLAGS\n\nDays talking: '+gv('days_talking')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Note energy shifts.\n2. Overall rating: green/yellow/red.\n3. Identify specific patterns and whether to address them.';
+  if(id==='escalation')return S+'\n\nMODE: ESCALATION CHECK\n\nDays talking: '+gv('days_talking')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Pace check.\n2. Mirror assessment.\n3. Specific next move with psych justification.';
+  if(id==='followup')return S+'\n\nMODE: FOLLOW-UP\n\nDays since: '+gv('days_since')+'\nVibe: '+gv('vibe')+moodBlock()+lmBlock()+'\n\nMy last message:\n"'+gv('my_last')+'"'+vBlock(v)+'\n\nInstructions:\n1. Verdict: send / wait.\n2. Message if sending.\n3. What to avoid.';
+  if(id==='reengage')return S+'\n\nMODE: RE-ENGAGE\n\nQuiet for: '+gv('quiet_dur')+'\nReasons: '+gv('quiet_why')+'\nVibe before: '+gv('vibe_bef')+lmBlock()+'\n\nLast interaction:\n'+gv('last_inter')+vBlock(v)+'\n\nInstructions:\n1. Verdict: reach out / leave it.\n2. If reaching out: acknowledge gap without over-explaining.\n3. One thing that would ruin it.';
+  if(id==='unmatch')return S+'\n\nMODE: UNMATCH ANALYSIS\n\nWhat happened: '+gv('what_hap')+'\n\nLast messages:\n'+gv('conv')+'\n\nInstructions:\n1. Moment it shifted.\n2. What likely happened.\n3. 2-3 concrete lessons.';
+  if(id==='first_date')return S+'\n\nMODE: FIRST DATE TEXT\n\nSituation: '+gv('fd_sit')+'\nPlatform: '+gv('platform')+'\nContext: '+gv('fd_ctx')+nmBlock()+vBlock(v)+'\n\nInstructions:\n1. Psychology of this moment.\n2. Generate 2 options. Why they work. Question Logic.';
+  if(id==='cancelled')return S+'\n\nMODE: SHE CANCELLED\n\nHow far out: '+gv('can_tim')+'\nVibe: '+gv('vibe')+'\n\nWhat she said:\n"'+gv('can_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. Read the cancellation tone.\n2. Three strategies: Confident reschedule / Cool / Light.\n3. Which fits best.';
+  if(id==='number')return S+'\n\nMODE: NUMBER EXCHANGE\n\nSituation: '+gv('num_sit')+'\nPlatform: '+gv('platform')+(gv('context')?'\nContext: '+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Why framing matters here.\n2. Two message options. What they signal.';
+  if(id==='first_move')return S+'\n\nMODE: FIRST MOVE\n\nWhat she did: '+gv('fm_type')+'\nPlatform: '+gv('platform')+'\n\nWhat she said:\n"'+gv('her_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. Frame analysis.\n2. Two responses to keep you in the driver seat.';
+  if(id==='ex_mention')return S+'\n\nMODE: EX MENTION\n\nHow: '+gv('ex_how')+'\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('her_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. The specific trap men fall into here.\n2. Two responses signaling security.';
+  if(id==='compliment')return S+'\n\nMODE: COMPLIMENT\n\nType: '+gv('cp_type')+'\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('her_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. Why deflecting fails.\n2. Three options to accept confidently.';
+  if(id==='morning')return S+'\n\nMODE: MORNING/NIGHT TEXT\n\nType: '+gv('mn_type')+'\nStage: '+gv('mn_stage')+(gv('context')?'\nContext: '+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Psychological risk check.\n2. Three options: minimal to warmer.';
+  if(id==='starters')return S+'\n\nMODE: STARTERS\n\nStage: '+gv('stage')+'\n\nAbout her:\n'+gv('her_bio')+'\n\nInstructions:\n1. Generate 5 conversation angles based on bio details. Do not use generic questions.';
+  if(id==='photo')return S+'\n\nMODE: PHOTO ANALYSER\n\nPlatform: '+gv('platform')+'\n\nHer photos:\n'+gv('photo_desc')+'\n\nInstructions:\n1. Read photos as signals (values/personality).\n2. 3 conversation angles referencing details most ignore.';
+  if(id==='eval')return S+'\n\nMODE: RESPONSE EVALUATOR\n\nOriginal context:\n'+gv('orig_ctx')+'\n\nAI reply:\n"'+gv('ai_resp')+'"\n\nInstructions:\n1. Rate Naturalness/Neediness.\n2. List AI tells.\n3. Improved human version.';
+  if(id==='thread')return S+'\n\nMODE: THREAD BUILDER\n\nPlatform: '+gv('platform')+'\nCurrent stage: '+gv('stage')+'\nGoal: '+gv('th_goal')+'\n\nHer last message:\n"'+gv('her_msg')+'"\n\nInstructions:\n1. Map out sequence of 3-4 messages to goal.\n2. For each: what to say, why, mirror check.';
+  if(id==='summariser')return S+'\n\nMODE: CONVERSATION SUMMARISER\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. State of the dynamic.\n2. Her personality read.\n3. Topics covered (don\'t repeat).\n4. Next move.';
+  if(id==='shit_test')return S+"\n\nMODE: SHE IS TESTING ME\n\nType: "+gv('st_type')+'\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('her_msg')+'"'+(gv('context')?'\nContext:\n'+gv('context'):'')+vBlock(v)+"\n\nInstructions:\n1. Identify test core.\n2. What most men do wrong.\n3. 3 responses: Calm / Humour / Reframe.";
+  if(id==='went_cold')return S+'\n\nMODE: SHE WENT COLD\n\nWhen: '+gv('wc_when')+'\nDays talking: '+gv('days_talking')+vBlock(v)+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Diagnosis.\n2. Worth addressing?\n3. Messages to lightly acknowledge vs ignore.';
+  if(id==='slow_down')return S+'\n\nMODE: SLOW DOWN\n\nStage: '+gv('stage')+vBlock(v)+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Why slowing down raises value.\n2. Tactical approach to pull back without confusing her.';
+  if(id==='after_date')return S+'\n\nMODE: AFTER GREAT DATE\n\nTiming: '+gv('ad_time')+'\nPlatform: '+gv('platform')+nmBlock()+lmBlock()+vBlock(v)+'\n\nHow it went:\n'+gv('date_ctx')+'\n\nInstructions:\n1. Psychology of post-date window.\n2. 3 options: minimal / warm / warmer.';
+  if(id==='vague_plans')return S+'\n\nMODE: VAGUE ABOUT PLANS\n\nDuration: '+gv('vp_dur')+'\nStage: '+gv('stage')+vBlock(v)+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Diagnose: genuine vs soft-no vs test.\n2. Verdict: push once or back off.\n3. Messages for both routes.';
+  if(id==='bio')return S+'\n\nMODE: BIO WRITER\n\nPlatform: '+gv('platform')+'\nLength: '+gv('bio_len')+'\n\nAbout me:\n'+gv('my_facts')+'\n\nInstructions:\n1. Write confident bio. No cliches.\n2. Explain psychological impression.';
+  if(id==='date_ideas')return S+'\n\nMODE: DATE IDEAS\n\nCity: '+gv('city')+'\nBudget: '+gv('budget')+'\n\nHer interests:\n'+gv('her_int')+'\n\nInstructions:\n1. 3 specific date ideas for this city.\n2. Bond-style suggestion lines.';
+  if(id==='what_bond')return S+'\n\nMODE: WHAT WOULD BOND DO\n\nSituation:\n'+gv('wb_sit')+(gv('wb_ctx')?'\n\nContext:\n'+gv('wb_ctx'):'')+'\n\nInstructions:\n1. What is really happening?\n2. What would Bond do/say (mindset).\n3. Generate message EN+DE or explain silence.';
+  if(id==='first_date_planner')return S+'\n\nMODE: FIRST DATE PLANNER\n\nCity: '+gv('fdp_location')+(gv('fdp_ctx')?'\nExtra context: '+gv('fdp_ctx'):'')+'\n\nYour idea:\n'+gv('fdp_idea')+'\n\nConversation:\n'+gv('fdp_conv')+'\n\nInstructions:\n1. List 5 things she revealed.\n2. Assess date idea fit.\n3. 5 conversation threads to use.\n4. Date arc energy guidelines.';
+  if(id==='ghost_resurrection')return S+'\n\nMODE: GHOST RESURRECTION\n\nQuiet duration: '+gv('quiet_dur')+'\nPlatform: '+gv('platform')+'\n\nLast conversation:\n'+gv('conv')+vBlock(v)+'\n\nInstructions:\n1. Why ghosts happen.\n2. 2-3 specific lines that assume comfort and skip the small talk.';
+  if(id==='apology')return S+'\n\nMODE: THE APOLOGY\n\nWhat happened: '+gv('what_hap')+'\nStage: '+gv('stage')+vBlock(v)+'\n\nInstructions:\n1. How to apologize without groveling.\n2. 2 message options that own the mistake and maintain frame.';
+  if(id==='social_media')return S+'\n\nMODE: IG/SOCIAL MOVE\n\nPlatform: '+gv('platform')+'\n\nHer post/story:\n'+gv('her_msg')+vBlock(v)+'\n\nInstructions:\n1. The trap of complimenting looks on IG.\n2. 3 short, specific replies that stand out from the DMs.';
+  if(id==='flake_handling')return S+'\n\nMODE: FLAKE HANDLER\n\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('can_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. The difference between maybe and yes.\n2. 2 responses that cleanly withdraw the offer and maintain value.';
+  if(id==='banter_escalation')return S+'\n\nMODE: BANTER ESCALATOR\n\nStage: '+gv('stage')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Diagnose the current platonic level.\n2. 3 ways to introduce playful friction or tension to escalate the vibe.';
+  if(id==='post_hookup')return S+'\n\nMODE: POST-INTIMACY\n\nStage: '+gv('stage')+'\n\nHow it went:\n'+gv('date_ctx')+vBlock(v)+'\n\nInstructions:\n1. The psychology of the morning after.\n2. 2-3 calm, securing messages that establish the new dynamic without pressure.';
+  if(id==='post_mortem')return S+'\n\nMODE: POST-MORTEM ANALYSIS\n\nChat History:\n'+gv('conv')+'\n\nInstructions:\n1. Identify exact moment the energy died.\n2. Diagnose core mistake.\n3. Give one actionable rule for the next match.';
   return S;
 }
 
