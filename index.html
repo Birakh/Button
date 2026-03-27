@@ -18,7 +18,7 @@
 }
 html{-webkit-text-size-adjust:100%;}
 body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden; transition: background 0.2s, color 0.2s;}
-.app{max-width:680px;margin:0 auto;padding:20px 16px 100px; display:none;} /* Hidden until unlocked */
+.app{max-width:680px;margin:0 auto;padding:20px 16px 100px; display:block;} 
 .hdr{text-align:center;margin-bottom:24px; position:relative; cursor:pointer;}
 .hdr h1{font-size:22px;font-weight:300;letter-spacing:.06em;font-family:'SF Mono',monospace;}
 .hdr h1 span{color:var(--ac);}
@@ -36,7 +36,6 @@ textarea{resize:vertical;min-height:80px;}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239898a8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
 .row{margin-bottom:14px;}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-@media(max-width:380px){.r2{grid-template-columns:1fr;}}
 .card{background:var(--bg2);border:.5px solid var(--bo);border-radius:var(--rl);padding:18px 16px;margin-bottom:14px;}
 .ctag{font-size:10px;font-family:'SF Mono',monospace;color:var(--ac);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
 .card h2{font-size:16px;font-weight:500;margin-bottom:14px;}
@@ -48,13 +47,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 @media(min-width:500px){.mbox{grid-template-columns:repeat(3,1fr);}}
 .mcard{background:var(--bg3);border:.5px solid var(--bo);border-radius:var(--r);padding:12px;text-align:left;cursor:pointer;min-height:70px;}
 .mcard:active,.mcard.on{border-color:var(--ac);background:rgba(200,169,110,.08);}
-.mcard .mn{font-size:10px;color:var(--ac);font-family:'SF Mono',monospace;margin-bottom:3px;letter-spacing:.05em;}
+.mcard .mn{font-size:10px;color:var(--ac);font-family:'SF Mono',monospace;margin-bottom:3px;}
 .mcard .ml{font-size:13px;color:var(--t);font-weight:500;}
 .mcard .ms{font-size:11px;color:var(--t3);margin-top:2px;}
 .vbox{background:rgba(200,169,110,.05);border:.5px solid rgba(200,169,110,.25);border-radius:var(--r);padding:12px 13px;margin-bottom:14px;}
 .vbox label{color:var(--ac);}
 .vbox textarea{background:rgba(200,169,110,.06);border-color:rgba(200,169,110,.2);}
-.vbox textarea:focus{border-color:var(--ac);}
 .vhint{font-size:11px;color:var(--ac);opacity:.6;margin-top:5px;font-family:'SF Mono',monospace;line-height:1.5;}
 .chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
 .chip{padding:7px 13px;border-radius:20px;font-size:13px;border:.5px solid var(--bo);background:transparent;color:var(--t2);cursor:pointer;min-height:36px;}
@@ -92,29 +90,15 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .mqc{background:linear-gradient(135deg,rgba(200,169,110,.07) 0%,rgba(200,169,110,.02) 100%);border:.5px solid rgba(200,169,110,.25);border-radius:var(--rl);padding:18px 16px;margin-bottom:12px;}
 .mq{font-size:16px;font-weight:300;line-height:1.65;font-style:italic;margin-bottom:8px;}
 .mn2{font-size:12px;color:var(--t3);font-family:'SF Mono',monospace;}
-.vsr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
-.vsbad{background:rgba(224,92,92,.06);border:.5px solid rgba(224,92,92,.2);border-radius:var(--r);padding:10px 12px;}
-.vsgood{background:rgba(62,207,142,.06);border:.5px solid rgba(62,207,142,.2);border-radius:var(--r);padding:10px 12px;}
-.vsl{font-size:10px;font-family:'SF Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
-.vsbad .vsl{color:var(--rd);} .vsgood .vsl{color:var(--gr);}
-.vst{font-size:13px;line-height:1.5;font-style:italic;}
-.vsbad .vst{color:rgba(224,92,92,.8);} .vsgood .vst{color:rgba(62,207,142,.8);}
-.rl{list-style:none;margin-top:8px;}
-.rl li{font-size:13px;color:var(--t2);padding:5px 0;border-bottom:.5px solid var(--bo);display:flex;gap:8px;line-height:1.6;}
-.rl li:last-child{border-bottom:none;}
-.rl li .d{color:var(--ac);flex-shrink:0;font-family:'SF Mono',monospace;}
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
 .si{background:var(--bg3);border-radius:var(--r);padding:10px 12px;border:.5px solid var(--bo);}
 .sin{font-size:12px;font-weight:500;margin-bottom:3px;}
 .sid{font-size:11px;color:var(--t2);line-height:1.4;}
 
-/* Modals & Lock Screen */
+/* Modals */
 .modal-overlay {position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; display:none; align-items:center; justify-content:center; padding:16px;}
 .modal-overlay.on {display:flex;}
 .modal-content {background:var(--bg2); border:1px solid var(--bo); border-radius:var(--rl); padding:20px; width:100%; max-width:400px;}
-#lock-screen {background:var(--bg); z-index:9999;}
-#lock-screen .modal-content {border-color:var(--ac); text-align:center;}
-#lock-msg {color:var(--rd); font-size:12px; margin-top:8px; min-height:18px;}
 
 /* Stealth Mode */
 body.stealth-mode { background: #ffffff !important; color: #111 !important; font-family: 'Arial', sans-serif !important; }
@@ -128,20 +112,10 @@ body.stealth-mode .btn, body.stealth-mode .btn2 { background: #eee !important; c
 </head>
 <body>
 
-<div class="modal-overlay on" id="lock-screen">
-  <div class="modal-content">
-    <h1 style="font-family:'SF Mono',monospace; font-weight:300; font-size:24px; margin-bottom:10px;">Bond <span style="color:var(--ac);">Vault</span></h1>
-    <p id="lock-title" style="color:var(--t2); font-size:14px; margin-bottom:20px;">Enter Master Passcode</p>
-    <input type="password" id="passcode-input" placeholder="Passcode..." style="text-align:center; font-size:18px; letter-spacing:2px;" onkeypress="if(event.key==='Enter') unlockApp()">
-    <button class="btn" onclick="unlockApp()" style="margin-top:16px;">Decrypt & Enter</button>
-    <div id="lock-msg"></div>
-  </div>
-</div>
-
 <div class="app" id="main-app">
 <div class="hdr" id="main-hdr">
   <h1>Bond <span>Suite</span></h1>
-  <p>zero api · fully encrypted CRM</p>
+  <p>zero api · cloud sync CRM</p>
   <button class="settings-btn" onclick="toggleDossier()">⚙️</button>
 </div>
 
@@ -205,11 +179,7 @@ body.stealth-mode .btn, body.stealth-mode .btn2 { background: #eee !important; c
     <span class="otag" id="out-tag"></span>
   </div>
   <div class="pbox" id="pbox" onclick="selectPrompt(this)"></div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:10px;">
-    <span style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;" id="char-count"></span>
-    <span style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;">tap prompt to select all</span>
-  </div>
-  <div style="display:flex;gap:8px;">
+  <div style="display:flex;gap:8px;margin-top:10px;">
     <button class="btn" onclick="doCopy()" id="copy-btn" style="flex:2;">Copy prompt</button>
     <button class="btn2" onclick="resetAll()" style="flex:1;">Reset</button>
   </div>
@@ -218,45 +188,38 @@ body.stealth-mode .btn, body.stealth-mode .btn2 { background: #eee !important; c
 </div>
 
 <div class="mpane" id="mp-reference">
-
 <div class="rtabs">
   <button class="rtab on" onclick="swRef('principles',this)">Principles</button>
   <button class="rtab" onclick="swRef('mistakes',this)">Mistakes</button>
   <button class="rtab" onclick="swRef('signals',this)">Signals</button>
 </div>
-
 <div class="rpane on" id="rp-principles">
   <div class="mqc"><div class="mq">"Bond does not try to impress. He simply is. The absence of effort is the effort."</div><div class="mn2">Daniel Craig era</div></div>
   <div class="rsec"><div class="rsec-t">Core principles</div>
-    <div class="rc"><div class="rch"><div class="rci" style="background:rgba(200,169,110,.1);">🎯</div><div><div class="rcl">Non-neediness</div><div class="rcs">The foundation of everything</div></div></div><div class="rcb">Attraction drops the moment approval-seeking becomes visible. Every message you send should imply you have a life and options. This does not mean being cold — it means being <strong>selective with your attention</strong>.</div></div>
-    <div class="rc"><div class="rch"><div class="rci" style="background:rgba(62,207,142,.1);">⚖️</div><div><div class="rcl">Mirror her energy</div><div class="rcs">Never exceed her investment level</div></div></div><div class="rcb">If she sends 3 words, do not send 3 paragraphs. If she is warm, be warm. If she is brief, match it. <strong>Jumping ahead emotionally creates pressure</strong> — it signals you are more invested than she is.</div></div>
-    <div class="rc"><div class="rch"><div class="rci" style="background:rgba(92,157,224,.1);">👁️</div><div><div class="rcl">Specificity</div><div class="rcs">The single biggest trust builder</div></div></div><div class="rcb">Referencing something she actually said proves you were listening. Generic replies feel like copy-paste. Specific replies that call back real details signal genuine interest.</div></div>
-    <div class="rc"><div class="rch"><div class="rci" style="background:rgba(224,168,74,.1);">✂️</div><div><div class="rcl">Brevity signals confidence</div><div class="rcs">Short is stronger</div></div></div><div class="rcb">Long messages signal insecurity — you are filling silence because it makes you anxious. <strong>Short, well-chosen words signal you are comfortable with space.</strong></div></div>
-    <div class="rc"><div class="rch"><div class="rci" style="background:rgba(62,207,142,.1);">🧠</div><div><div class="rcl">Emotional regulation</div><div class="rcs">Never reply from anxiety</div></div></div><div class="rcb">The worst messages are sent in the first 30 seconds of reading something that triggers you. Pause. The calm reply is always better than the reactive one.</div></div>
+    <div class="rc"><div class="rch"><div class="rci" style="background:rgba(200,169,110,.1);">🎯</div><div><div class="rcl">Non-neediness</div><div class="rcs">The foundation of everything</div></div></div><div class="rcb">Attraction drops the moment approval-seeking becomes visible. Every message you send should imply you have a life and options.</div></div>
+    <div class="rc"><div class="rch"><div class="rci" style="background:rgba(62,207,142,.1);">⚖️</div><div><div class="rcl">Mirror her energy</div><div class="rcs">Never exceed her investment level</div></div></div><div class="rcb">If she sends 3 words, do not send 3 paragraphs. Jumping ahead emotionally creates pressure.</div></div>
+    <div class="rc"><div class="rch"><div class="rci" style="background:rgba(92,157,224,.1);">👁️</div><div><div class="rcl">Specificity</div><div class="rcs">The single biggest trust builder</div></div></div><div class="rcb">Referencing something she actually said proves you were listening. Generic replies feel like copy-paste.</div></div>
+    <div class="rc"><div class="rch"><div class="rci" style="background:rgba(224,168,74,.1);">✂️</div><div><div class="rcl">Brevity signals confidence</div><div class="rcs">Short is stronger</div></div></div><div class="rcb">Long messages signal insecurity. <strong>Short, well-chosen words signal you are comfortable with space.</strong></div></div>
   </div>
 </div>
-
 <div class="rpane" id="rp-mistakes">
   <div class="rsec"><div class="rsec-t">Most common mistakes</div>
-    <div class="rc"><div class="rcl" style="margin-bottom:6px;">Double texting from anxiety</div><div class="rcb">Sending a follow-up because she has not replied signals you are monitoring her. One message. Wait. A second message lowers your value.</div></div>
-    <div class="rc"><div class="rcl" style="margin-bottom:6px;">Over-explaining when she goes cold</div><div class="rcb">When the energy drops, the instinct is to explain or apologise. This signals guilt and neediness. A brief natural re-engage is almost always stronger.</div></div>
-    <div class="rc"><div class="rcl" style="margin-bottom:6px;">Failing a test by engaging with it</div><div class="rcb">When she says something provocative, most men get defensive. Bond acknowledges it with calm amusement and does not take the bait.</div></div>
-    <div class="rc"><div class="rcl" style="margin-bottom:6px;">Moving too fast emotionally</div><div class="rcb">Saying too much too soon about feelings or the future creates pressure. Attraction needs space and a little uncertainty to grow.</div></div>
+    <div class="rc"><div class="rcl" style="margin-bottom:6px;">Double texting from anxiety</div><div class="rcb">Sending a follow-up because she has not replied signals you are monitoring her. One message. Wait.</div></div>
+    <div class="rc"><div class="rcl" style="margin-bottom:6px;">Over-explaining when she goes cold</div><div class="rcb">When the energy drops, the instinct is to explain or apologise. This signals guilt and neediness.</div></div>
+    <div class="rc"><div class="rcl" style="margin-bottom:6px;">Failing a test by engaging with it</div><div class="rcb">When she says something provocative, most men get defensive. Bond acknowledges it with calm amusement.</div></div>
   </div>
 </div>
-
 <div class="rpane" id="rp-signals">
   <div class="rsec"><div class="rsec-t">Reading her messages</div>
     <div class="sgrid">
-      <div class="si" style="border-color:rgba(62,207,142,.3);"><div class="sin" style="color:var(--gr);">Very interested</div><div class="sid">Long replies, asks questions, references past things you said, initiates.</div></div>
-      <div class="si" style="border-color:rgba(62,207,142,.2);"><div class="sin" style="color:var(--gr);">Interested</div><div class="sid">Consistent replies, some questions, warm tone, replies without delays.</div></div>
-      <div class="si"><div class="sin" style="color:var(--t2);">Neutral</div><div class="sid">Short replies, answers without asking her own, polite but not pulling.</div></div>
-      <div class="si" style="border-color:rgba(224,168,74,.3);"><div class="sin" style="color:var(--yl);">Testing you</div><div class="sid">Provocative comment, goes cold after warm — watching how you react.</div></div>
-      <div class="si" style="border-color:rgba(224,92,92,.2);"><div class="sin" style="color:var(--rd);">Going cold</div><div class="sid">Shorter replies, slower, one word answers, stops asking anything.</div></div>
+      <div class="si" style="border-color:rgba(62,207,142,.3);"><div class="sin" style="color:var(--gr);">Very interested</div><div class="sid">Long replies, asks questions, references past things you said.</div></div>
+      <div class="si" style="border-color:rgba(62,207,142,.2);"><div class="sin" style="color:var(--gr);">Interested</div><div class="sid">Consistent replies, some questions, warm tone.</div></div>
+      <div class="si"><div class="sin" style="color:var(--t2);">Neutral</div><div class="sid">Short replies, answers without asking her own.</div></div>
+      <div class="si" style="border-color:rgba(224,168,74,.3);"><div class="sin" style="color:var(--yl);">Testing you</div><div class="sid">Provocative comment, goes cold after warm.</div></div>
+      <div class="si" style="border-color:rgba(224,92,92,.2);"><div class="sin" style="color:var(--rd);">Going cold</div><div class="sid">Shorter replies, slower, one word answers.</div></div>
     </div>
   </div>
 </div>
-
 </div></div><div class="notif" id="notif"></div>
 
 <div class="modal-overlay" id="dossier-modal">
@@ -270,13 +233,13 @@ body.stealth-mode .btn, body.stealth-mode .btn2 { background: #eee !important; c
     <div class="row"><label>Your Job</label><input type="text" id="dos_job"></div>
     <div class="row"><label>Your Vibe</label><textarea id="dos_hobbies" rows="2"></textarea></div>
     
-    <div class="ctag" style="margin-top:24px;">Zero-Knowledge Cloud Sync</div>
+    <div class="ctag" style="margin-top:24px;">Cloud Sync (GitHub Gist)</div>
     <div class="row"><label>GitHub PAT (repo/gist scope)</label><input type="password" id="dos_pat" placeholder="ghp_xxxxxxxx..."></div>
-    <div style="font-size:11px; color:var(--t3); margin-bottom:14px; line-height:1.4;">The app will automatically create and manage a secure, private Gist for your encrypted data using this token.</div>
-    <button class="btn" onclick="saveDossier()">Save & Encrypt</button>
+    <div style="font-size:11px; color:var(--t3); margin-bottom:14px; line-height:1.4;">The app will automatically create and manage a secure, private Gist for your data using this token.</div>
+    <button class="btn" onclick="saveDossier()">Save & Sync</button>
 
     <div class="div" style="margin-top:24px;"></div>
-    <button class="btn btn-danger" onclick="selfDestruct()">Initiate Self-Destruct</button>
+    <button class="btn btn-danger" onclick="clearData()">Clear All Data</button>
   </div>
 </div>
 
@@ -284,85 +247,21 @@ body.stealth-mode .btn, body.stealth-mode .btn2 { background: #eee !important; c
 // ==== HTML ESCAPER ====
 function eH(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// ==== CRYPTO ENGINE (AES-GCM) ====
-const enc = new TextEncoder();
-const dec = new TextDecoder();
-let sessionKey = null; // Stored only in RAM
-
-async function getKeyMaterial(password) {
-  return window.crypto.subtle.importKey("raw", enc.encode(password), {name: "PBKDF2"}, false, ["deriveBits", "deriveKey"]);
-}
-async function getCryptoKey(keyMaterial, salt) {
-  return window.crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" }, keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-}
-async function encryptData(dataObj) {
-  if(!sessionKey) throw new Error("No session key");
-  const salt = window.crypto.getRandomValues(new Uint8Array(16));
-  const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  const keyMaterial = await getKeyMaterial(sessionKey);
-  const key = await getCryptoKey(keyMaterial, salt);
-  const encodedData = enc.encode(JSON.stringify(dataObj));
-  const encrypted = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, encodedData);
-  
-  const encryptedArray = new Uint8Array(encrypted);
-  let combined = new Uint8Array(salt.length + iv.length + encryptedArray.length);
-  combined.set(salt, 0); combined.set(iv, salt.length); combined.set(encryptedArray, salt.length + iv.length);
-  return btoa(String.fromCharCode.apply(null, combined));
-}
-async function decryptData(base64String, password) {
-  try {
-    const combinedStr = atob(base64String);
-    const combined = new Uint8Array(combinedStr.length);
-    for (let i = 0; i < combinedStr.length; i++) combined[i] = combinedStr.charCodeAt(i);
-    const salt = combined.slice(0, 16);
-    const iv = combined.slice(16, 28);
-    const data = combined.slice(28);
-    const keyMaterial = await getKeyMaterial(password);
-    const key = await getCryptoKey(keyMaterial, salt);
-    const decrypted = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, data);
-    return JSON.parse(dec.decode(decrypted));
-  } catch (e) { throw new Error("Decryption failed"); }
-}
-
 // ==== STATE MANAGEMENT ====
 let bondState = { dossier: { name: '', job: '', hobbies: '', pat: '', gistId: '' }, matches: [], archive: [] };
 let selMode='', extConv='', currentActiveMatch = null;
 
 window.onload = function() {
-  const localGibberish = localStorage.getItem('bondVault');
-  if(localGibberish) {
-    document.getElementById('lock-title').textContent = 'Enter Master Passcode';
-  } else {
-    document.getElementById('lock-title').textContent = 'Create Master Passcode (DO NOT LOSE THIS)';
-    document.getElementById('lock-title').style.color = 'var(--rd)';
-  }
+  bootApp();
 };
 
-async function unlockApp() {
-  const pass = document.getElementById('passcode-input').value;
-  const msg = document.getElementById('lock-msg');
-  if(!pass) { msg.textContent = 'Passcode required'; return; }
-  
-  const localGibberish = localStorage.getItem('bondVault');
-  
-  if(!localGibberish) {
-    sessionKey = pass;
-    await saveStateLocally();
-    bootApp();
-  } else {
-    try {
-      bondState = await decryptData(localGibberish, pass);
-      sessionKey = pass;
-      bootApp();
-    } catch(e) {
-      msg.textContent = 'Decryption failed. Wrong passcode.';
-    }
-  }
-}
-
 function bootApp() {
-  document.getElementById('lock-screen').style.display = 'none';
-  document.getElementById('main-app').style.display = 'block';
+  // Load from local storage directly (No Encryption)
+  try {
+    const saved = localStorage.getItem('bondVault');
+    if (saved) bondState = JSON.parse(saved);
+  } catch(e) {}
+
   document.getElementById('dos_name').value = bondState.dossier.name || '';
   document.getElementById('dos_job').value = bondState.dossier.job || '';
   document.getElementById('dos_hobbies').value = bondState.dossier.hobbies || '';
@@ -371,9 +270,8 @@ function bootApp() {
   pullFromGist(); 
 }
 
-async function saveStateLocally() {
-  const gibberish = await encryptData(bondState);
-  localStorage.setItem('bondVault', gibberish);
+function saveStateLocally() {
+  localStorage.setItem('bondVault', JSON.stringify(bondState));
   renderMatches();
 }
 
@@ -382,10 +280,11 @@ async function forceGistSync() {
   let {pat, gistId} = bondState.dossier;
   if(!pat) return; 
   const btn = document.getElementById('sync-btn');
-  if(btn) btn.textContent = 'Encrypting...';
+  if(btn) btn.textContent = 'Syncing...';
   
   try {
-    const gibberish = await encryptData(bondState);
+    // Save as plain JSON
+    const contentString = JSON.stringify(bondState, null, 2);
     const headers = { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json' };
 
     if (!gistId) {
@@ -402,7 +301,7 @@ async function forceGistSync() {
             body: JSON.stringify({
               description: 'Bond_Suite_Vault_Do_Not_Delete',
               public: false, 
-              files: { "bond-crm.json": { content: gibberish } }
+              files: { "bond-crm.json": { content: contentString } }
             })
           });
           if (createRes.ok) {
@@ -416,10 +315,10 @@ async function forceGistSync() {
 
     const response = await fetch(`https://api.github.com/gists/${gistId}`, {
       method: 'PATCH', headers,
-      body: JSON.stringify({ files: { "bond-crm.json": { content: gibberish } } })
+      body: JSON.stringify({ files: { "bond-crm.json": { content: contentString } } })
     });
 
-    if(response.ok) { showN('Vault secured to Cloud.'); if(btn) btn.textContent = 'Cloud Sync'; }
+    if(response.ok) { showN('Synced to Cloud.'); if(btn) btn.textContent = 'Cloud Sync'; }
     else { showN('Sync failed. Check API token.'); if(btn) btn.textContent = 'Sync Error'; }
   } catch(e) { console.error(e); showN('Network error.'); if(btn) btn.textContent = 'Cloud Sync'; }
 }
@@ -445,24 +344,23 @@ async function pullFromGist() {
     const response = await fetch(`https://api.github.com/gists/${gistId}`, { headers });
     if(response.ok) {
       const data = await response.json();
-      const gibberish = data.files["bond-crm.json"]?.content;
-      if(gibberish && gibberish !== "{}") {
-        bondState = await decryptData(gibberish, sessionKey);
+      const contentString = data.files["bond-crm.json"]?.content;
+      if(contentString && contentString !== "{}") {
+        bondState = JSON.parse(contentString);
         saveStateLocally();
-        showN('Cloud state merged and decrypted.');
+        showN('Cloud state pulled successfully.');
       }
     }
-  } catch(e) { console.log("Pull failed or bad key", e); }
+  } catch(e) { console.log("Pull failed", e); }
 }
 
-// ==== SELF DESTRUCT ====
-async function selfDestruct() {
-  if(!confirm("WARNING: This will permanently delete your local data AND your encrypted cloud backup on GitHub. Proceed?")) return;
-  if(!confirm("Are you absolutely sure? This cannot be undone.")) return;
+// ==== CLEAR DATA ====
+async function clearData() {
+  if(!confirm("WARNING: This will permanently delete your local data AND your cloud backup on GitHub. Proceed?")) return;
 
   const {pat, gistId} = bondState.dossier;
 
-  // 1. Wipe Cloud
+  // Wipe Cloud
   if(pat && gistId) {
     try {
       await fetch(`https://api.github.com/gists/${gistId}`, {
@@ -472,19 +370,19 @@ async function selfDestruct() {
     } catch(e) { console.error("Failed to delete cloud gist"); }
   }
 
-  // 2. Wipe Local
+  // Wipe Local
   localStorage.removeItem('bondVault');
-
-  // 3. Reset UI
+  
   bondState = { dossier: { name: '', job: '', hobbies: '', pat: '', gistId: '' }, matches: [], archive: [] };
-  sessionKey = null;
-  document.getElementById('passcode-input').value = '';
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('lock-screen').style.display = 'flex';
-  document.getElementById('lock-title').textContent = 'Vault Destroyed. Create New Passcode.';
-  document.getElementById('lock-title').style.color = 'var(--rd)';
-  document.getElementById('lock-msg').textContent = '';
+  
+  document.getElementById('dos_name').value = '';
+  document.getElementById('dos_job').value = '';
+  document.getElementById('dos_hobbies').value = '';
+  document.getElementById('dos_pat').value = '';
+  
+  renderMatches();
   toggleDossier();
+  showN('All data wiped.');
 }
 
 function toggleDossier() {
@@ -496,7 +394,7 @@ function saveDossier() {
   bondState.dossier.job = document.getElementById('dos_job').value.trim();
   bondState.dossier.hobbies = document.getElementById('dos_hobbies').value.trim();
   bondState.dossier.pat = document.getElementById('dos_pat').value.trim();
-  saveStateLocally(); forceGistSync(); toggleDossier(); showN('Dossier locked & Syncing...');
+  saveStateLocally(); forceGistSync(); toggleDossier(); showN('Dossier saved & Syncing...');
 }
 
 // ==== STEALTH MODE ====
@@ -606,7 +504,7 @@ function handleFile(inp){
 }
 function clearExt(){extConv='';document.getElementById('ext-wrap').style.display='none'; document.getElementById('fup').value=''; document.getElementById('pacing-tracker').style.display='none';}
 
-// ==== CORE MODES (ALL 32 RESTORED) ====
+// ==== CORE MODES (38 MODES) ====
 var MODES=[
   {id:'bond_reply',n:'Bond Reply',s:'She sent a message',i:'01',v:true,f:['her_msg','platform','stage','subtext','her_vibe','time_since','context']},
   {id:'bondify',n:'Bond-ify',s:'Rewrite my draft',i:'02',v:false,f:['my_draft','platform','stage']},
@@ -639,26 +537,32 @@ var MODES=[
   {id:'date_ideas',n:'Date Ideas',s:'What to suggest',i:'29',v:false,f:['her_int','city','budget']},
   {id:'what_bond',n:'What Would Bond Do',s:'Any situation',i:'30',v:false,f:['wb_sit','wb_ctx']},
   {id:'first_date_planner',n:'First Date Planner',s:'Full date prep',i:'31',v:false,f:['fdp_conv','fdp_idea','fdp_location','fdp_ctx']},
+  {id:'ghost_resurrection',n:'Ghost Resurrection',s:'Revive dead thread',i:'32',v:true,f:['conv','quiet_dur','platform']},
+  {id:'apology',n:'The Apology',s:'Messed up, keep frame',i:'33',v:true,f:['what_hap','stage']},
+  {id:'social_media',n:'IG/Social Move',s:'Reply to story/DM',i:'34',v:true,f:['her_msg','platform']},
+  {id:'flake_handling',n:'Flake Handler',s:'She said maybe',i:'35',v:true,f:['can_msg','stage']},
+  {id:'banter_escalation',n:'Banter Escalator',s:'Turn platonic flirtatious',i:'36',v:false,f:['conv','stage']},
+  {id:'post_hookup',n:'Post-Intimacy',s:'The morning after',i:'37',v:true,f:['date_ctx','stage']},
   {id:'post_mortem',n:'Post-Mortem',s:'Analyze failure',i:'00',v:false,f:['conv']}
 ];
 
 var FLD={
-  her_msg:{l:'Her message',t:'ta',p:'Paste what she sent...'},
+  her_msg:{l:'Her message/post',t:'ta',p:'Paste what she sent or posted...'},
   my_draft:{l:'Your draft',t:'ta',p:'Paste what you were going to send...'},
-  her_bio:{l:'Her bio / profile',t:'ta',p:'e.g. Loves hiking, works in architecture, dog called Miso...'},
+  her_bio:{l:'Her bio / profile',t:'ta',p:'e.g. Loves hiking, works in architecture...'},
   conv:{l:'Conversation',t:'ta',p:'Paste the full conversation...',rows:7},
   my_last:{l:'Your last message',t:'ta',p:'What did you last send?'},
   last_inter:{l:'Where you left off',t:'ta',p:'Describe or paste the last messages...'},
   my_facts:{l:'About you',t:'ta',p:'e.g. Software engineer in Vienna...'},
   her_int:{l:'Her interests',t:'ta',p:'e.g. Likes art, good food...'},
   fd_ctx:{l:'Context',t:'ta',p:'e.g. Meeting for coffee Saturday at 3pm',rows:2},
-  can_msg:{l:'What she said',t:'ta',p:'e.g. Hey sorry something came up...'},
+  can_msg:{l:'What she said',t:'ta',p:'e.g. I might be busy, let you know...'},
   context:{l:'Context',t:'ta',p:'Optional — last few messages...',opt:true,rows:2},
   ai_resp:{l:'The AI reply you got',t:'ta',p:'Paste the message the AI generated...',rows:4},
   orig_ctx:{l:'Original context',t:'ta',p:'What was the conversation about...'},
   photo_desc:{l:'Describe her photos',t:'ta',p:'e.g. First photo hiking in mountains...'},
   th_goal:{l:'Where you want this to go',t:'ta',p:'e.g. Move to suggesting a date...',rows:2},
-  date_ctx:{l:'How the date went',t:'ta',p:'e.g. Had coffee for 2 hours...'},
+  date_ctx:{l:'How the date/night went',t:'ta',p:'e.g. Had coffee for 2 hours...'},
   platform:{l:'Platform',t:'sel',o:['Tinder','Bumble','WhatsApp','Hinge','IG']},
   stage:{l:'Stage',t:'sel',o:['Opening / first messages','Just matched','Getting to know each other','5-10 messages in','Past the small talk','Suggesting a date','Post first date','Deeper conversation','Been talking weeks','Deeper / personal']},
   opener_style:{l:'Style',t:'sel',o:['Witty and specific','Calm and curious','Lightly flirtatious','Short and confident']},
@@ -666,8 +570,8 @@ var FLD={
   days_since:{l:'Days since',t:'sel',o:['1 day','2 days','3 days','5 days','A week+']},
   vibe:{l:'How was it going?',t:'sel',o:['Really well','Decent','A bit flat','Had agreed on a date']},
   vibe_bef:{l:'Vibe before',t:'sel',o:['Really well','Decent','A bit slow']},
-  quiet_dur:{l:'How long quiet',t:'sel',o:['2-3 days','About a week','2 weeks','A month+']},
-  what_hap:{l:'What happened',t:'sel',o:['She unmatched','She ghosted','Stopped after a date']},
+  quiet_dur:{l:'How long quiet',t:'sel',o:['2-3 days','About a week','2 weeks','1-2 months','3+ months']},
+  what_hap:{l:'What happened',t:'sel',o:['She unmatched','She ghosted','Stopped after a date', 'I made a bad joke', 'I forgot to reply', 'I got too intense']},
   fd_sit:{l:'Situation',t:'sel',o:['Suggesting the first date','Confirming plans (day before)','Day of the date','Morning after it went well','She went quiet after the date']},
   can_tim:{l:'How far out',t:'sel',o:['Same day','Day before','A few days before']},
   num_sit:{l:'Situation',t:'sel',o:['I want to ask for her number','She just gave me her number','She asked for mine']},
@@ -698,7 +602,7 @@ var FLD={
   mood:{l:'Overall conversation mood',t:'chips',o:['Just started','Dying / going flat','Holding steady','Warm and good','Really great energy'],opt:true},
 };
 
-// Form Builder (Restored Voice and Chips logic)
+// Form Builder
 function tgChip(el){el.className=el.className.indexOf(' on')>=0?'chip':'chip on';}
 function buildForm(m,pre){
   var f=document.getElementById('dyn-form');f.innerHTML='';
@@ -750,7 +654,6 @@ function gv(fid){
 }
 function gVoice(){var el=document.getElementById('f_voice');return el?el.value.trim():'';}
 
-// Filter Modes
 function filterModes(q){
   var cards=document.querySelectorAll('.mcard');
   var low=q.toLowerCase().trim();
@@ -831,6 +734,12 @@ function getModeP(id,v){
   if(id==='date_ideas')return S+'\nMODE: DATE IDEAS\n\nCity: '+gv('city')+'\nBudget: '+gv('budget')+'\n\nHer interests:\n'+gv('her_int')+'\n\nInstructions:\n1. 3 specific date ideas for this city.\n2. Bond-style suggestion lines.';
   if(id==='what_bond')return S+'\nMODE: WHAT WOULD BOND DO\n\nSituation:\n'+gv('wb_sit')+(gv('wb_ctx')?'\n\nContext:\n'+gv('wb_ctx'):'')+'\n\nInstructions:\n1. What is really happening?\n2. What would Bond do/say (mindset).\n3. Generate message EN+DE or explain silence.';
   if(id==='first_date_planner')return S+'\nMODE: FIRST DATE PLANNER\n\nCity: '+gv('fdp_location')+(gv('fdp_ctx')?'\nExtra context: '+gv('fdp_ctx'):'')+'\n\nYour idea:\n'+gv('fdp_idea')+'\n\nConversation:\n'+gv('fdp_conv')+'\n\nInstructions:\n1. List 5 things she revealed.\n2. Assess date idea fit.\n3. 5 conversation threads to use.\n4. Date arc energy guidelines.';
+  if(id==='ghost_resurrection')return S+'\nMODE: GHOST RESURRECTION\n\nQuiet duration: '+gv('quiet_dur')+'\nPlatform: '+gv('platform')+'\n\nLast conversation:\n'+gv('conv')+vBlock(v)+'\n\nInstructions:\n1. Why ghosts happen.\n2. 2-3 specific lines that assume comfort and skip the small talk.';
+  if(id==='apology')return S+'\nMODE: THE APOLOGY\n\nWhat happened: '+gv('what_hap')+'\nStage: '+gv('stage')+vBlock(v)+'\n\nInstructions:\n1. How to apologize without groveling.\n2. 2 message options that own the mistake and maintain frame.';
+  if(id==='social_media')return S+'\nMODE: IG/SOCIAL MOVE\n\nPlatform: '+gv('platform')+'\n\nHer post/story:\n'+gv('her_msg')+vBlock(v)+'\n\nInstructions:\n1. The trap of complimenting looks on IG.\n2. 3 short, specific replies that stand out from the DMs.';
+  if(id==='flake_handling')return S+'\nMODE: FLAKE HANDLER\n\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('can_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. The difference between maybe and yes.\n2. 2 responses that cleanly withdraw the offer and maintain value.';
+  if(id==='banter_escalation')return S+'\nMODE: BANTER ESCALATOR\n\nStage: '+gv('stage')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Diagnose the current platonic level.\n2. 3 ways to introduce playful friction or tension to escalate the vibe.';
+  if(id==='post_hookup')return S+'\nMODE: POST-INTIMACY\n\nStage: '+gv('stage')+'\n\nHow it went:\n'+gv('date_ctx')+vBlock(v)+'\n\nInstructions:\n1. The psychology of the morning after.\n2. 2-3 calm, securing messages that establish the new dynamic without pressure.';
   if(id==='post_mortem')return S+'\nMODE: POST-MORTEM ANALYSIS\n\nChat History:\n'+gv('conv')+'\n\nInstructions:\n1. Identify exact moment the energy died.\n2. Diagnose core mistake.\n3. Give one actionable rule for the next match.';
   return S;
 }
