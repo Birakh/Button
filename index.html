@@ -175,12 +175,17 @@ body.stealth-mode .btn, body.stealth-mode .btn2 { background: #eee !important; c
     <div class="row"><label>Your Vibe</label><textarea id="dos_hobbies" rows="2"></textarea></div>
     
     <div class="ctag" style="margin-top:24px;">Zero-Knowledge Cloud Sync</div>
-    <div class="row"><label>GitHub PAT (repo/gist scope)</label><input type="password" id="dos_pat" placeholder="ghp_xxxxxxxx..."></div>
+    <div class="row"><label>GitHub PAT (repo/gist scope)</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="password" id="dos_pat" placeholder="github_pat_xxxxxxxx..." style="flex:1;">
+        <button class="btn2 btn-sm" onclick="testGitHubPAT()" id="pat-test-btn" style="white-space:nowrap; min-width:90px;">Test</button>
+      </div>
+      <div id="pat-test-result" style="font-size:11px; margin-top:6px; min-height:16px; font-family:'SF Mono',monospace;"></div>
+    </div>
     <div style="font-size:11px; color:var(--t3); margin-bottom:14px; line-height:1.4;">The app will automatically create and manage a secure, private Gist for your encrypted data using this token.</div>
     <button class="btn" onclick="saveDossier()">Save & Encrypt</button>
 
-    <div class="div" style="margin-top:24px;"></div>
-    <button class="btn btn-danger" onclick="selfDestruct()">Initiate Self-Destruct</button>
+
   </div>
 </div>
 
@@ -356,36 +361,40 @@ async function pullFromGist() {
   } catch(e) { console.log("Pull failed or bad key", e); }
 }
 
-// ==== SELF DESTRUCT ====
-async function selfDestruct() {
-  if(!confirm("WARNING: This will permanently delete your local data AND your encrypted cloud backup on GitHub. Proceed?")) return;
-  if(!confirm("Are you absolutely sure? This cannot be undone.")) return;
 
-  const {pat, gistId} = bondState.dossier;
 
-  // 1. Wipe Cloud
-  if(pat && gistId) {
-    try {
-      await fetch(`https://api.github.com/gists/${gistId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `token ${pat}` }
-      });
-    } catch(e) { console.error("Failed to delete cloud gist"); }
+async function testGitHubPAT() {
+  const pat = document.getElementById('dos_pat').value.trim();
+  const resultEl = document.getElementById('pat-test-result');
+  const btn = document.getElementById('pat-test-btn');
+  if (!pat) { resultEl.style.color = 'var(--rd)'; resultEl.textContent = '✗ Enter a PAT first.'; return; }
+  if (!pat.startsWith('github_pat_') && !pat.startsWith('ghp_')) { resultEl.style.color = 'var(--yl)'; resultEl.textContent = '⚠ Token should start with github_pat_ — double check.'; }
+  btn.textContent = 'Testing...'; btn.disabled = true; resultEl.textContent = '';
+  try {
+    const res = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': `token ${pat}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.ok) {
+      const user = await res.json();
+      // Check gist scope
+      const scopes = res.headers.get('x-oauth-scopes') || '';
+      const hasGist = scopes.includes('gist') || scopes.includes('repo');
+      if (hasGist) {
+        resultEl.style.color = 'var(--gr)';
+        resultEl.textContent = `✓ Connected as @${user.login} — gist scope confirmed.`;
+      } else {
+        resultEl.style.color = 'var(--yl)';
+        resultEl.textContent = `⚠ Authenticated as @${user.login}, but missing gist scope.`;
+      }
+    } else if (res.status === 401) {
+      resultEl.style.color = 'var(--rd)'; resultEl.textContent = '✗ Invalid token — unauthorized.';
+    } else {
+      resultEl.style.color = 'var(--rd)'; resultEl.textContent = `✗ Error ${res.status}. Check token.`;
+    }
+  } catch(e) {
+    resultEl.style.color = 'var(--rd)'; resultEl.textContent = '✗ Network error. Check connection.';
   }
-
-  // 2. Wipe Local
-  localStorage.removeItem('bondVault');
-
-  // 3. Reset UI
-  bondState = { dossier: { name: '', job: '', hobbies: '', pat: '', gistId: '' }, matches: [], archive: [] };
-  sessionKey = null;
-  document.getElementById('passcode-input').value = '';
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('lock-screen').style.display = 'flex';
-  document.getElementById('lock-title').textContent = 'Vault Destroyed. Create New Passcode.';
-  document.getElementById('lock-title').style.color = 'var(--rd)';
-  document.getElementById('lock-msg').textContent = '';
-  toggleDossier();
+  btn.textContent = 'Test'; btn.disabled = false;
 }
 
 function toggleDossier() {
