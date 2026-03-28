@@ -23,7 +23,7 @@
 }
 html{-webkit-text-size-adjust:100%;}
 body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;transition:background .2s,color .2s;}
-.app{max-width:680px;margin:0 auto;padding:20px 16px 100px;display:block;}
+.app{max-width:680px;margin:0 auto;padding:20px 16px 100px;display:none;}
 .hdr{text-align:center;margin-bottom:24px;position:relative;cursor:pointer;}
 .hdr h1{font-size:22px;font-weight:300;letter-spacing:.06em;font-family:'SF Mono','Fira Code','Courier New',monospace;}
 .hdr h1 span{color:var(--ac);}
@@ -131,6 +131,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .cbox.on{background:rgba(62,207,142,.1);border-color:var(--gr);}
 .ctext{font-size:13px;color:var(--t2);line-height:1.5;}
 .ctext strong{color:var(--t);font-weight:500;}
+/* PAT Unlock Screen */
+#pat-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}
+#pat-screen .pat-box{background:var(--bg2);border:1px solid var(--ac);border-radius:var(--rl);padding:28px 20px;width:100%;max-width:360px;text-align:center;}
+#pat-msg{color:var(--rd);font-size:12px;margin-top:8px;min-height:18px;font-family:'SF Mono',monospace;}
+#pat-status{font-size:12px;margin-top:8px;font-family:'SF Mono',monospace;color:var(--t3);}
 /* Modals & Lock Screen */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.on{display:flex;}
@@ -147,6 +152,26 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
 </style>
 </head>
 <body>
+
+<!-- UNLOCK SCREEN -->
+<div id="pat-screen">
+  <div class="pat-box">
+    <h1 style="font-family:'SF Mono',monospace;font-weight:300;font-size:24px;margin-bottom:6px;">Bond <span style="color:var(--ac);">Suite</span></h1>
+    <p id="pat-screen-sub" style="color:var(--t2);font-size:13px;margin-bottom:20px;font-family:'SF Mono',monospace;">Enter credentials to unlock</p>
+    <div class="unlock-field">
+      <label>GitHub PAT</label>
+      <input type="password" id="pat-input" placeholder="github_pat_xxxxxxxx..." style="font-size:14px;" onkeypress="if(event.key==='Enter')document.getElementById('pass-input').focus()">
+    </div>
+    <div class="unlock-field">
+      <label>Passphrase <span style="color:var(--t3);font-weight:300;text-transform:none;letter-spacing:0;">(your personal encryption key)</span></label>
+      <input type="password" id="pass-input" placeholder="Something memorable you won't forget..." style="font-size:14px;" onkeypress="if(event.key==='Enter')bootWithPAT()">
+    </div>
+    <div style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;text-align:left;margin-bottom:14px;line-height:1.5;">PAT fetches your data from GitHub. Passphrase decrypts it. They are independent — rotate your PAT freely, your data stays decryptable.</div>
+    <button class="btn" onclick="bootWithPAT()">Unlock</button>
+    <div id="pat-msg"></div>
+    <div id="pat-status"></div>
+  </div>
+</div>
 
 <!-- MAIN APP -->
 <div class="app" id="main-app">
@@ -401,17 +426,18 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
     <div class="row"><label>Your Name</label><input type="text" id="dos_name"></div>
     <div class="row"><label>Your Job</label><input type="text" id="dos_job"></div>
     <div class="row"><label>Your Vibe / Hobbies</label><textarea id="dos_hobbies" rows="2"></textarea></div>
-    <div class="ctag" style="margin-top:24px;">Zero-Knowledge Cloud Sync</div>
+    <div class="ctag" style="margin-top:24px;">Cloud Sync</div>
     <div class="r2">
       <div class="row"><label>GitHub PAT</label><input type="password" id="dos_pat" placeholder="github_pat_xxxxxxxx..."></div>
       <div class="row"><label>Repo Name</label><input type="text" id="dos_repo" placeholder="username/repo-name"></div>
     </div>
+    <div class="row"><label>Passphrase <span class="op">(leave blank to keep current)</span></label><input type="password" id="dos_pass" placeholder="Your encryption passphrase..."></div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
       <button class="btn2 btn-sm" onclick="testGitHubPAT()" id="pat-test-btn" style="flex:1;">Test Connection</button>
     </div>
     <div id="pat-test-result" style="font-size:11px;margin-bottom:10px;min-height:16px;font-family:'SF Mono',monospace;"></div>
-    <div style="font-size:11px;color:var(--t3);margin-bottom:14px;line-height:1.4;">Your PAT is the encryption key. The file on GitHub is AES-GCM encrypted — without your PAT it is unreadable. Keep your PAT safe. <span style="color:var(--ac);">Saved as bond-crm.json.</span></div>
-    <button class="btn" onclick="saveDossier()">Save & Encrypt</button>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:14px;line-height:1.4;">PAT = GitHub access only. Passphrase = encryption key. <span style="color:var(--ac);">Rotate your PAT freely — your data stays decryptable.</span></div>
+    <button class="btn" onclick="saveDossier()">Save & Sync</button>
   </div>
 </div>
 
@@ -454,47 +480,111 @@ async function decryptData(base64String, pat) {
 }
 
 // ==== STATE ====
+// Architecture: PAT = GitHub auth only. Passphrase = AES-GCM encryption key.
+// No localStorage (incognito-friendly). All state in RAM. GitHub is source of truth.
 let bondState = { dossier:{name:'',job:'',hobbies:'',pat:'',repo:'',gistId:''}, matches:[], archive:[] };
 let currentActiveMatch = null;
+let activePAT = '';        // GitHub token — RAM only
+let activePassphrase = ''; // Encryption key — RAM only, never stored anywhere
 var selMode='', selLang='both', extConv='', qMode='';
 var saves=[];
 try{saves=JSON.parse(localStorage.getItem('bsaves')||'[]');}catch(e){}
 
 window.onload = function() {
-  try { const saved = localStorage.getItem('bondVault'); if(saved) bondState = JSON.parse(saved); } catch(e){}
+  // Nothing to load from storage — incognito mode, all state comes from GitHub
+};
+
+async function bootWithPAT() {
+  const pat = document.getElementById('pat-input').value.trim();
+  const passphrase = document.getElementById('pass-input').value.trim();
+  const msg = document.getElementById('pat-msg');
+  const status = document.getElementById('pat-status');
+
+  if(!pat) { msg.textContent = '✗ GitHub PAT required.'; return; }
+  if(!passphrase) { msg.textContent = '✗ Passphrase required.'; return; }
+
+  msg.textContent = '';
+  status.style.color = 'var(--t3)';
+  status.textContent = 'Verifying PAT with GitHub...';
+
+  // Step 1: Verify PAT
+  try {
+    const res = await fetch('https://api.github.com/user', {
+      headers: {'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json'}
+    });
+    if(!res.ok) { msg.textContent = '✗ Invalid PAT — GitHub rejected it.'; status.textContent = ''; return; }
+    const user = await res.json();
+    status.textContent = '✓ @'+user.login+' verified. Fetching vault...';
+  } catch(e) { msg.textContent = '✗ Network error.'; status.textContent = ''; return; }
+
+  activePAT = pat;
+  activePassphrase = passphrase;
+  bondState.dossier.pat = pat;
+
+  // Step 2: Try to pull + decrypt from GitHub
+  status.textContent = 'Pulling encrypted vault from GitHub...';
+  const pulled = await pullFromGist(null, true);
+
+  if(pulled) {
+    status.textContent = '✓ Vault decrypted. Loading...';
+    setTimeout(bootApp, 300);
+  } else {
+    // No cloud data yet — new vault
+    status.textContent = 'No vault found — creating new one...';
+    bondState = { dossier:{name:'',job:'',hobbies:'',pat,repo:'',gistId:''}, matches:[], archive:[] };
+    bootApp();
+    setTimeout(() => { toggleDossier(); showN('Welcome! Fill in your profile.'); }, 400);
+  }
+}
+
+function bootApp() {
+  document.getElementById('pat-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  populateDossierFields();
+  renderMatches();
+  renderSaved();
+  loadPrefs();
+  buildCL();
+}
+
+function populateDossierFields() {
   document.getElementById('dos_name').value = bondState.dossier.name || '';
   document.getElementById('dos_job').value = bondState.dossier.job || '';
   document.getElementById('dos_hobbies').value = bondState.dossier.hobbies || '';
-  document.getElementById('dos_pat').value = bondState.dossier.pat || '';
+  document.getElementById('dos_pat').value = activePAT || '';
   document.getElementById('dos_repo').value = bondState.dossier.repo || '';
-  renderMatches(); renderSaved(); loadPrefs(); buildCL();
-  if(bondState.dossier.pat) pullFromGist();
-};
+  // Never pre-fill passphrase field — user re-enters if they want to change it
+}
 
 function saveStateLocally() {
-  localStorage.setItem('bondVault', JSON.stringify(bondState));
+  // Incognito mode — no localStorage. State lives in RAM only.
   renderMatches();
 }
 
 // ==== CLOUD SYNC ====
-async function forceGistSync() {
+async function forceGistSync(btnEl) {
   let {pat, repo, gistId} = bondState.dossier;
-  if(!pat) return;
-  const btn = document.getElementById('sync-btn');
-  if(btn) btn.textContent = 'Syncing...';
+  pat = pat || activePAT;
+  const passphrase = activePassphrase;
+  if(!pat) { showN('No PAT — re-enter credentials.'); return; }
+  if(!passphrase) { showN('No passphrase in memory — re-unlock to push.'); return; }
+  const btn = btnEl || document.getElementById('sync-btn');
+  const origText = btn ? btn.textContent : '';
+  if(btn) btn.textContent = 'Encrypting...';
   try {
-    const gibberish = await encryptData(bondState, pat);
+    // Encrypt with PASSPHRASE (not PAT) — PAT is only for GitHub auth
+    const encrypted = await encryptData(bondState, passphrase);
     const headers = {'Authorization':`token ${pat}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};
     if(repo) {
       const fileUrl = `https://api.github.com/repos/${repo}/contents/bond-crm.json`;
       let sha = null;
       const getRes = await fetch(fileUrl, {headers});
       if(getRes.ok) { const existing = await getRes.json(); sha = existing.sha; }
-      const body = {message:'Bond Suite vault sync', content:btoa(unescape(encodeURIComponent(gibberish)))};
+      const body = {message:'Bond Suite vault sync', content:btoa(unescape(encodeURIComponent(encrypted)))};
       if(sha) body.sha = sha;
       const putRes = await fetch(fileUrl, {method:'PUT',headers,body:JSON.stringify(body)});
-      if(putRes.ok){showN('Vault secured to Repo.');if(btn)btn.textContent='Cloud Sync';}
-      else{showN('Repo sync failed.');if(btn)btn.textContent='Sync Error';}
+      if(putRes.ok){showN('🔒 Encrypted & pushed to Repo.');}
+      else{showN('Repo sync failed. Check PAT & repo name.');}
     } else {
       if(!gistId) {
         const listRes = await fetch('https://api.github.com/gists', {headers});
@@ -503,49 +593,65 @@ async function forceGistSync() {
           const existing = gists.find(g=>g.description==='Bond_Suite_Vault_Do_Not_Delete'||(g.files&&g.files['bond-crm.json']));
           if(existing){gistId=existing.id;}
           else {
-            const createRes = await fetch('https://api.github.com/gists',{method:'POST',headers,body:JSON.stringify({description:'Bond_Suite_Vault_Do_Not_Delete',public:false,files:{"bond-crm.json":{content:gibberish}}})});
+            const createRes = await fetch('https://api.github.com/gists',{method:'POST',headers,body:JSON.stringify({description:'Bond_Suite_Vault_Do_Not_Delete',public:false,files:{"bond-crm.json":{content:encrypted}}})});
             if(createRes.ok){const ng=await createRes.json();gistId=ng.id;}else throw new Error("Gist creation failed");
           }
           bondState.dossier.gistId=gistId;
         }
       }
-      const response = await fetch(`https://api.github.com/gists/${gistId}`,{method:'PATCH',headers,body:JSON.stringify({files:{"bond-crm.json":{content:gibberish}}})});
-      if(response.ok){showN('Vault secured to Cloud.');if(btn)btn.textContent='Cloud Sync';}
-      else{showN('Sync failed.');if(btn)btn.textContent='Sync Error';}
+      const response = await fetch(`https://api.github.com/gists/${gistId}`,{method:'PATCH',headers,body:JSON.stringify({files:{"bond-crm.json":{content:encrypted}}})});
+      if(response.ok){showN('🔒 Encrypted & pushed to Gist.');}
+      else{showN('Sync failed.');}
     }
-  } catch(e){console.error(e);showN('Network error.');if(btn)btn.textContent='Cloud Sync';}
+  } catch(e){console.error(e);showN('Network error.');}
+  if(btn) btn.textContent = origText;
 }
 
-async function pullFromGist() {
+async function pullFromGist(btnEl, silent=false) {
   let {pat, repo, gistId} = bondState.dossier;
-  if(!pat) return;
+  pat = pat || activePAT;
+  if(!pat) { if(!silent) showN('Add your PAT in ⚙️ Dossier first.'); return false; }
+  const btn = btnEl || null;
+  const origText = btn ? btn.textContent : '';
+  if(btn) btn.textContent = 'Pulling...';
   const headers = {'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json'};
   try {
+    let encrypted = null;
     if(repo) {
       const fileUrl = `https://api.github.com/repos/${repo}/contents/bond-crm.json`;
       const res = await fetch(fileUrl, {headers});
-      if(res.ok) {
-        const data = await res.json();
-        const gibberish = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
-        if(gibberish) { try { bondState = await decryptData(gibberish, pat); saveStateLocally(); showN('🔓 Decrypted & pulled from Repo.'); } catch(e){ showN('❌ Decrypt failed — wrong PAT?'); } }
-      }
+      if(res.ok) { const data = await res.json(); encrypted = decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))); }
     } else {
       if(!gistId) {
         const listRes = await fetch('https://api.github.com/gists', {headers});
         if(listRes.ok) {
           const gists = await listRes.json();
           const existing = gists.find(g=>g.description==='Bond_Suite_Vault_Do_Not_Delete'||(g.files&&g.files['bond-crm.json']));
-          if(existing){gistId=existing.id;bondState.dossier.gistId=gistId;}else return;
+          if(existing){gistId=existing.id;bondState.dossier.gistId=gistId;}
+          else{if(btn)btn.textContent=origText;return false;}
         }
       }
       const response = await fetch(`https://api.github.com/gists/${gistId}`, {headers});
-      if(response.ok) {
-        const data = await response.json();
-        const gibberish = data.files["bond-crm.json"]?.content;
-        if(gibberish&&gibberish!=="{}") { try { bondState = await decryptData(gibberish, pat); saveStateLocally(); showN('🔓 Decrypted & pulled from Gist.'); } catch(e){ showN('❌ Decrypt failed — wrong PAT?'); } }
-      }
+      if(response.ok){ const data=await response.json(); encrypted=data.files["bond-crm.json"]?.content; }
     }
-  } catch(e) { console.log("Pull failed", e); }
+    if(encrypted && encrypted.length > 10) {
+      try {
+        const passphrase = activePassphrase;
+        if(!passphrase) { if(!silent) showN('❌ No passphrase in memory — unlock first.'); if(btn) btn.textContent=origText; return false; }
+        const decrypted = await decryptData(encrypted, passphrase);
+        bondState = decrypted;
+        bondState.dossier.pat = pat;
+        activePAT = pat;
+        saveStateLocally();
+        populateDossierFields();
+        if(!silent) showN('🔓 Vault decrypted & loaded.');
+        if(btn) btn.textContent = origText;
+        return true;
+      } catch(e) { if(!silent) showN('❌ Wrong passphrase — data not decrypted.'); if(btn) btn.textContent=origText; return false; }
+    }
+  } catch(e) { console.log("Pull failed", e); if(!silent) showN('Pull failed. Check connection.'); }
+  if(btn) btn.textContent = origText;
+  return false;
 }
 
 async function testGitHubPAT() {
@@ -646,9 +752,13 @@ function saveDossier() {
   bondState.dossier.name = document.getElementById('dos_name').value.trim();
   bondState.dossier.job = document.getElementById('dos_job').value.trim();
   bondState.dossier.hobbies = document.getElementById('dos_hobbies').value.trim();
-  bondState.dossier.pat = document.getElementById('dos_pat').value.trim();
+  const newPAT = document.getElementById('dos_pat').value.trim();
+  if(newPAT) { activePAT = newPAT; bondState.dossier.pat = newPAT; }
+  const newPass = document.getElementById('dos_pass').value.trim();
+  if(newPass) { activePassphrase = newPass; showN('Passphrase updated. Pushing re-encrypted vault...'); }
   bondState.dossier.repo = document.getElementById('dos_repo').value.trim();
-  saveStateLocally();forceGistSync();toggleDossier();showN('Dossier saved & Syncing...');
+  saveStateLocally(); forceGistSync(); toggleDossier();
+  if(!newPass) showN('Dossier saved & syncing...');
 }
 
 // ==== LANGUAGE TOGGLE ====
