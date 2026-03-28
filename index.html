@@ -23,7 +23,7 @@
 }
 html{-webkit-text-size-adjust:100%;}
 body{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;transition:background .2s,color .2s;}
-.app{max-width:680px;margin:0 auto;padding:20px 16px 100px;display:none;}
+.app{max-width:680px;margin:0 auto;padding:20px 16px 100px;display:block;}
 .hdr{text-align:center;margin-bottom:24px;position:relative;cursor:pointer;}
 .hdr h1{font-size:22px;font-weight:300;letter-spacing:.06em;font-family:'SF Mono','Fira Code','Courier New',monospace;}
 .hdr h1 span{color:var(--ac);}
@@ -135,8 +135,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.on{display:flex;}
 .modal-content{background:var(--bg2);border:1px solid var(--bo);border-radius:var(--rl);padding:20px;width:100%;max-width:400px;}
-#lock-screen{background:var(--bg);z-index:9999;}
-#lock-screen .modal-content{border-color:var(--ac);text-align:center;}
 #lock-msg{color:var(--rd);font-size:12px;margin-top:8px;min-height:18px;}
 /* Stealth Mode */
 body.stealth-mode{background:#ffffff !important;color:#111 !important;font-family:'Arial',sans-serif !important;}
@@ -149,17 +147,6 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
 </style>
 </head>
 <body>
-
-<!-- LOCK SCREEN -->
-<div class="modal-overlay on" id="lock-screen">
-  <div class="modal-content">
-    <h1 style="font-family:'SF Mono',monospace;font-weight:300;font-size:24px;margin-bottom:10px;">Bond <span style="color:var(--ac);">Vault</span></h1>
-    <p id="lock-title" style="color:var(--t2);font-size:14px;margin-bottom:20px;">Enter Master Passcode</p>
-    <input type="password" id="passcode-input" placeholder="Passcode..." style="text-align:center;font-size:18px;letter-spacing:2px;" onkeypress="if(event.key==='Enter') unlockApp()">
-    <button class="btn" onclick="unlockApp()" style="margin-top:16px;">Decrypt & Enter</button>
-    <div id="lock-msg"></div>
-  </div>
-</div>
 
 <!-- MAIN APP -->
 <div class="app" id="main-app">
@@ -183,7 +170,11 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
     <div id="match-list"><div style="font-size:13px;color:var(--t3);">No active matches yet.</div></div>
     <div style="margin-top:10px;display:flex;gap:8px;">
       <button class="btn2 btn-sm" onclick="showNewMatchUI()" style="flex:1;">+ Add Match</button>
-      <button class="btn2 btn-sm" onclick="forceGistSync()" id="sync-btn" style="flex:1;">Cloud Sync</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn2 btn-sm" onclick="testGitHubPAT()" id="test-btn" style="flex:1;">Test</button>
+      <button class="btn2 btn-sm" onclick="pullFromGist(this)" style="flex:1.5;">↓ Pull</button>
+      <button class="btn2 btn-sm" onclick="forceGistSync(this)" id="sync-btn" style="flex:1.5;">↑ Push</button>
     </div>
     <div id="new-match-ui" style="display:none;margin-top:12px;border-top:1px solid var(--bo);padding-top:12px;">
       <div class="row"><label>Her Name</label><input type="text" id="nm_name" placeholder="e.g. Sara"></div>
@@ -419,7 +410,7 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
       <button class="btn2 btn-sm" onclick="testGitHubPAT()" id="pat-test-btn" style="flex:1;">Test Connection</button>
     </div>
     <div id="pat-test-result" style="font-size:11px;margin-bottom:10px;min-height:16px;font-family:'SF Mono',monospace;"></div>
-    <div style="font-size:11px;color:var(--t3);margin-bottom:14px;line-height:1.4;">Encrypted data saved as <span style="color:var(--ac);">bond-crm.json</span> in your repo. Fallback: private Gist.</div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:14px;line-height:1.4;">Your PAT is the encryption key. The file on GitHub is AES-GCM encrypted — without your PAT it is unreadable. Keep your PAT safe. <span style="color:var(--ac);">Saved as bond-crm.json.</span></div>
     <button class="btn" onclick="saveDossier()">Save & Encrypt</button>
   </div>
 </div>
@@ -428,19 +419,17 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
 // ==== CRYPTO ENGINE (AES-GCM) ====
 const enc = new TextEncoder();
 const dec = new TextDecoder();
-let sessionKey = null;
-
 async function getKeyMaterial(password) {
   return window.crypto.subtle.importKey("raw", enc.encode(password), {name:"PBKDF2"}, false, ["deriveBits","deriveKey"]);
 }
 async function getCryptoKey(keyMaterial, salt) {
   return window.crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:100000,hash:"SHA-256"}, keyMaterial, {name:"AES-GCM",length:256}, false, ["encrypt","decrypt"]);
 }
-async function encryptData(dataObj) {
-  if(!sessionKey) throw new Error("No session key");
+async function encryptData(dataObj, pat) {
+  if(!pat) throw new Error("No PAT");
   const salt = window.crypto.getRandomValues(new Uint8Array(16));
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  const keyMaterial = await getKeyMaterial(sessionKey);
+  const keyMaterial = await getKeyMaterial(pat);
   const key = await getCryptoKey(keyMaterial, salt);
   const encodedData = enc.encode(JSON.stringify(dataObj));
   const encrypted = await window.crypto.subtle.encrypt({name:"AES-GCM",iv}, key, encodedData);
@@ -449,7 +438,7 @@ async function encryptData(dataObj) {
   combined.set(salt, 0); combined.set(iv, salt.length); combined.set(encryptedArray, salt.length + iv.length);
   return btoa(String.fromCharCode.apply(null, combined));
 }
-async function decryptData(base64String, password) {
+async function decryptData(base64String, pat) {
   try {
     const combinedStr = atob(base64String);
     const combined = new Uint8Array(combinedStr.length);
@@ -457,7 +446,7 @@ async function decryptData(base64String, password) {
     const salt = combined.slice(0, 16);
     const iv = combined.slice(16, 28);
     const data = combined.slice(28);
-    const keyMaterial = await getKeyMaterial(password);
+    const keyMaterial = await getKeyMaterial(pat);
     const key = await getCryptoKey(keyMaterial, salt);
     const decrypted = await window.crypto.subtle.decrypt({name:"AES-GCM",iv}, key, data);
     return JSON.parse(dec.decode(decrypted));
@@ -472,51 +461,18 @@ var saves=[];
 try{saves=JSON.parse(localStorage.getItem('bsaves')||'[]');}catch(e){}
 
 window.onload = function() {
-  const localData = localStorage.getItem('bondVault');
-  if(localData) {
-    document.getElementById('lock-title').textContent = 'Enter Master Passcode';
-  } else {
-    document.getElementById('lock-title').textContent = 'Create Master Passcode (DO NOT LOSE THIS)';
-    document.getElementById('lock-title').style.color = 'var(--rd)';
-  }
-};
-
-async function unlockApp() {
-  const pass = document.getElementById('passcode-input').value;
-  const msg = document.getElementById('lock-msg');
-  if(!pass) { msg.textContent = 'Passcode required'; return; }
-  const localData = localStorage.getItem('bondVault');
-  if(!localData) {
-    sessionKey = pass;
-    await saveStateLocally();
-    bootApp();
-  } else {
-    try {
-      bondState = await decryptData(localData, pass);
-      sessionKey = pass;
-      bootApp();
-    } catch(e) { msg.textContent = 'Decryption failed. Wrong passcode.'; }
-  }
-}
-
-function bootApp() {
-  document.getElementById('lock-screen').style.display = 'none';
-  document.getElementById('main-app').style.display = 'block';
+  try { const saved = localStorage.getItem('bondVault'); if(saved) bondState = JSON.parse(saved); } catch(e){}
   document.getElementById('dos_name').value = bondState.dossier.name || '';
   document.getElementById('dos_job').value = bondState.dossier.job || '';
   document.getElementById('dos_hobbies').value = bondState.dossier.hobbies || '';
   document.getElementById('dos_pat').value = bondState.dossier.pat || '';
   document.getElementById('dos_repo').value = bondState.dossier.repo || '';
-  renderMatches();
-  renderSaved();
-  loadPrefs();
-  buildCL();
-  pullFromGist();
-}
+  renderMatches(); renderSaved(); loadPrefs(); buildCL();
+  if(bondState.dossier.pat) pullFromGist();
+};
 
-async function saveStateLocally() {
-  const gibberish = await encryptData(bondState);
-  localStorage.setItem('bondVault', gibberish);
+function saveStateLocally() {
+  localStorage.setItem('bondVault', JSON.stringify(bondState));
   renderMatches();
 }
 
@@ -527,7 +483,7 @@ async function forceGistSync() {
   const btn = document.getElementById('sync-btn');
   if(btn) btn.textContent = 'Syncing...';
   try {
-    const gibberish = await encryptData(bondState);
+    const gibberish = await encryptData(bondState, pat);
     const headers = {'Authorization':`token ${pat}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};
     if(repo) {
       const fileUrl = `https://api.github.com/repos/${repo}/contents/bond-crm.json`;
@@ -571,7 +527,7 @@ async function pullFromGist() {
       if(res.ok) {
         const data = await res.json();
         const gibberish = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
-        if(gibberish) { bondState = await decryptData(gibberish, sessionKey); saveStateLocally(); showN('Cloud state merged from Repo.'); }
+        if(gibberish) { try { bondState = await decryptData(gibberish, pat); saveStateLocally(); showN('🔓 Decrypted & pulled from Repo.'); } catch(e){ showN('❌ Decrypt failed — wrong PAT?'); } }
       }
     } else {
       if(!gistId) {
@@ -586,17 +542,17 @@ async function pullFromGist() {
       if(response.ok) {
         const data = await response.json();
         const gibberish = data.files["bond-crm.json"]?.content;
-        if(gibberish&&gibberish!=="{}") { bondState = await decryptData(gibberish, sessionKey); saveStateLocally(); showN('Cloud state merged.'); }
+        if(gibberish&&gibberish!=="{}") { try { bondState = await decryptData(gibberish, pat); saveStateLocally(); showN('🔓 Decrypted & pulled from Gist.'); } catch(e){ showN('❌ Decrypt failed — wrong PAT?'); } }
       }
     }
   } catch(e) { console.log("Pull failed", e); }
 }
 
 async function testGitHubPAT() {
-  const pat = document.getElementById('dos_pat').value.trim();
-  const repo = document.getElementById('dos_repo').value.trim();
+  const pat = (document.getElementById('dos_pat') ? document.getElementById('dos_pat').value.trim() : '') || bondState.dossier.pat;
+  const repo = (document.getElementById('dos_repo') ? document.getElementById('dos_repo').value.trim() : '') || bondState.dossier.repo;
   const resultEl = document.getElementById('pat-test-result');
-  const btn = document.getElementById('pat-test-btn');
+  const btn = document.getElementById('pat-test-btn') || document.getElementById('test-btn');
   if(!pat){resultEl.style.color='var(--rd)';resultEl.textContent='✗ Enter a PAT first.';return;}
   btn.textContent='Testing...';btn.disabled=true;resultEl.textContent='';
   try {
@@ -787,6 +743,14 @@ var MODES=[
   {id:'date_ideas',n:'Date Ideas',s:'What to suggest',i:'29',v:false,f:['her_int','city','budget']},
   {id:'what_bond',n:'What Would Bond Do',s:'Any situation',i:'30',v:false,f:['wb_sit','wb_ctx']},
   {id:'first_date_planner',n:'First Date Planner',s:'Full date prep',i:'31',v:false,f:['fdp_conv','fdp_idea','fdp_location','fdp_ctx']},
+  {id:'ghost_resurrection',n:'Ghost Resurrection',s:'Revive dead thread',i:'32',v:true,f:['conv','quiet_dur','platform']},
+  {id:'apology',n:'The Apology',s:'Messed up, keep frame',i:'33',v:true,f:['what_hap','stage']},
+  {id:'social_media',n:'IG / Social Move',s:'Reply to story or DM',i:'34',v:true,f:['her_msg','platform']},
+  {id:'flake_handling',n:'Flake Handler',s:'She said maybe',i:'35',v:true,f:['can_msg','stage']},
+  {id:'banter_escalation',n:'Banter Escalator',s:'Turn platonic flirtatious',i:'36',v:false,f:['conv','stage']},
+  {id:'post_hookup',n:'Post-Intimacy',s:'The morning after',i:'37',v:true,f:['date_ctx','stage']},
+  {id:'date_intel',n:'Date Intel',s:'Profile + chat → date prep',i:'38',v:false,f:['fdp_conv','her_bio','date_intel_when','city']},
+  {id:'post_mortem',n:'Post-Mortem',s:'Analyze failure',i:'00',v:false,f:['conv']},
 ];
 
 var FLD={
@@ -813,8 +777,8 @@ var FLD={
   days_since:{l:'Days since',t:'sel',o:['1 day','2 days','3 days','5 days','A week+']},
   vibe:{l:'How was it going?',t:'sel',o:['Really well','Decent','A bit flat','Had agreed on a date']},
   vibe_bef:{l:'Vibe before',t:'sel',o:['Really well','Decent','A bit slow']},
-  quiet_dur:{l:'How long quiet',t:'sel',o:['2-3 days','About a week','2 weeks','A month+']},
-  what_hap:{l:'What happened',t:'sel',o:['She unmatched','She ghosted','Stopped after a date']},
+  quiet_dur:{l:'How long quiet',t:'sel',o:['2-3 days','About a week','2 weeks','1-2 months','3+ months']},
+  what_hap:{l:'What happened',t:'sel',o:['She unmatched','She ghosted','Stopped after a date','I made a bad joke','I forgot to reply','I got too intense']},
   fd_sit:{l:'Situation',t:'sel',o:['Suggesting the first date','Confirming plans (day before)','Day of the date','Morning after it went well','She went quiet after the date']},
   can_tim:{l:'How far out',t:'sel',o:['Same day','Day before','A few days before']},
   num_sit:{l:'Situation',t:'sel',o:['I want to ask for her number','She just gave me her number','She asked for mine']},
@@ -843,6 +807,7 @@ var FLD={
   her_name:{l:'Her name',t:'txt',p:'e.g. Sara',opt:true},
   last_met:{l:'Last time you met in person',t:'sel',o:['Never met yet','Today / yesterday','A few days ago','About a week ago','2+ weeks ago','A month or more'],opt:true},
   mood:{l:'Overall conversation mood',t:'chips',o:['Just started','Dying / going flat','Holding steady','Warm and good','Really great energy'],opt:true},
+  date_intel_when:{l:'When is the date?',t:'sel',o:['Today','Tomorrow','In 2-3 days','This weekend','Next week']},
 };
 
 // Build mode grid
@@ -965,6 +930,14 @@ function getModeP(id, v) {
   if(id==='date_ideas')return S+'MODE: DATE IDEAS\n\nCity: '+gv('city')+'\nBudget: '+gv('budget')+'\n\nHer interests:\n'+gv('her_int')+'\n\nInstructions:\n1. Generate 3 specific date ideas for this city and budget.\n2. For each: name, why it works for attraction dynamics, Bond-style suggestion line.\n3. Flag which has the best risk/reward for a first date and why.';
   if(id==='what_bond')return S+'MODE: WHAT WOULD BOND DO\n\nSituation:\n'+gv('wb_sit')+(gv('wb_ctx')&&gv('wb_ctx')!=='not specified'?'\n\nContext:\n'+gv('wb_ctx'):'')+'\n\nInstructions:\n1. What is the emotional core — what is really happening here?\n2. What would most men do wrong in this situation and the psychological reason it fails.\n3. What would Daniel Craig-era Bond do? Not a script — his mindset, his approach, the energy he would bring. Be specific.\n4. What would he say (if anything), what would he not say, how would he carry himself, what would he let go of entirely?\n5. The one shift in thinking that changes everything in this situation.\n6. If a message is needed: generate it EN+DE. If silence or action is the answer, explain exactly why.';
   if(id==='first_date_planner')return S+'MODE: FIRST DATE PLANNER\n\nCity: '+gv('fdp_location')+(gv('fdp_ctx')&&gv('fdp_ctx')!=='not specified'?'\n\nExtra context: '+gv('fdp_ctx'):'')+'\n\nYour idea / what you are thinking:\n'+gv('fdp_idea')+'\n\nConversation so far:\n'+gv('fdp_conv')+'\n\nInstructions:\n1. Read the full conversation carefully. List 5-7 specific things she mentioned, revealed, or hinted at — use her exact words where relevant.\n2. Date idea assessment: does your idea fit her based on what she revealed? Be honest.\n3. Gesture or detail assessment: if you mentioned something specific — does it reference something real from the conversation or come out of nowhere?\n4. What to talk about: 5 specific conversation threads worth picking up on the date.\n5. What NOT to bring up: 2-3 things to avoid based on the conversation.\n6. The date arc: how to handle arriving, mid-date, end of date, how to suggest seeing her again.\n7. Bond energy for this specific evening: 3 principles for how to carry yourself with this particular person.\n8. The second date: how to bring it up in a way that fits this specific dynamic without pressure.';
+  if(id==='ghost_resurrection')return S+'\n\nMODE: GHOST RESURRECTION\n\nQuiet for: '+gv('quiet_dur')+'\nPlatform: '+gv('platform')+'\n\nLast conversation:\n'+gv('conv')+vBlock(v)+'\n\nInstructions:\n1. Diagnose why she went quiet — cold exit, life got busy, or she just drifted.\n2. The trap: opening with "hey" or over-explaining. Why both fail.\n3. Generate 2-3 openers that assume comfort, skip the awkwardness, and re-enter as if no time has passed. Reference something real from the conversation.\n4. For each: message, why it bypasses the gap psychologically, Question Logic.\n5. If too much time has passed to re-engage: be honest about that.';
+  if(id==='apology')return S+'\n\nMODE: THE APOLOGY\n\nWhat happened: '+gv('what_hap')+'\nStage: '+gv('stage')+vBlock(v)+'\n\nInstructions:\n1. The Bond approach to apologies: own it in one sentence, no groveling, no over-explaining, move forward.\n2. Why excessive apologies lower value and create awkward silence.\n3. Generate 2 options: one minimal acknowledgement, one slightly warmer.\n4. For each: message, what it signals, how it keeps frame intact.\n5. When to apologize vs when silence is actually stronger.';
+  if(id==='social_media')return S+'\n\nMODE: IG / SOCIAL MOVE\n\nPlatform: '+gv('platform')+'\n\nHer post or story:\n'+gv('her_msg')+vBlock(v)+'\n\nInstructions:\n1. The trap: every man in her DMs is saying "wow" or complimenting her looks. Do not be that man.\n2. Read what the post/story reveals about her personality, what she cares about, what she finds funny.\n3. Generate 3 short replies (1 sentence max each) that are specific to what she posted — not her appearance.\n4. For each: message, which detail you referenced, why it stands out from the noise.\n5. Question Logic for each.';
+  if(id==='flake_handling')return S+'\n\nMODE: FLAKE HANDLER\n\nStage: '+gv('stage')+'\n\nWhat she said:\n"'+gv('can_msg')+'"'+vBlock(v)+'\n\nInstructions:\n1. Diagnose: is this a soft no, a genuine maybe, or a test to see how you react?\n2. The two worst responses: chasing (needy) and going cold (punishing). Both fail.\n3. Generate 2 responses that cleanly withdraw the offer and re-establish your own frame without drama.\n4. For each: message, what it signals about your investment level, when to use it.\n5. What to do if she comes back after silence.';
+  if(id==='banter_escalation')return S+'\n\nMODE: BANTER ESCALATOR\n\nStage: '+gv('stage')+'\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Diagnose the current dynamic: is it friendly, platonic, or is there already tension?\n2. Why escalation through challenge and teasing works better than escalation through compliments.\n3. Identify 2-3 specific things she said that can be used as material for playful friction.\n4. Generate 3 message approaches that introduce light tension or teasing using those details.\n5. For each: message, what dynamic it creates, risk/reward.\n6. The line between flirty and annoying — flag it.';
+  if(id==='post_hookup')return S+'\n\nMODE: POST-INTIMACY\n\nStage: '+gv('stage')+'\n\nHow the night went:\n'+gv('date_ctx')+vBlock(v)+'\n\nInstructions:\n1. The psychology of the morning after — what she is feeling (uncertainty, reading your signals), what she needs to see from you.\n2. The two failure modes: too clingy (creates pressure) vs total silence (creates anxiety).\n3. Generate 3 message options for different energy levels: light and warm / secure and simple / slightly playful.\n4. For each: message, what it signals about the dynamic going forward, connection risk.\n5. How to reference last night without making it awkward or over-earnest.\n6. Whether to mention seeing her again in this message or wait.';
+  if(id==='date_intel')return S+'\n\nMODE: DATE INTEL\n\nCity: '+gv('city')+'\nDate timing: '+gv('date_intel_when')+'\n\nHer profile / bio:\n'+gv('her_bio')+'\n\nFull conversation so far:\n'+gv('fdp_conv')+'\n\nInstructions:\n1. PROFILE READ: What does her bio tell you about her values, personality, and what she responds to? Note 3-4 specific details most men would miss.\n2. CONVERSATION READ: List 5-8 specific things she revealed, mentioned, or hinted at in chat — use her exact words. These are your gold.\n3. TALKING POINTS FOR THE DATE: Generate 5 specific conversation threads to pick up on. For each: topic, why it is interesting to her specifically, how to open it naturally.\n4. WHAT NOT TO BRING UP: 2-3 topics to avoid based on the conversation (things already exhausted, anything that created awkward energy).\n5. DATE ENERGY: How to carry yourself with this specific person. What she has revealed tells you whether she responds to calm confidence, humour, deep conversation, or lightness.\n6. OPENING ENERGY: How to greet her, what the first 5 minutes should feel like.\n7. MID-DATE MOMENT: One specific callback from the conversation to use naturally mid-date that will make her feel genuinely heard.\n8. CLOSING: How to end the date and bring up seeing her again in a way that fits this specific dynamic.';
+  if(id==='post_mortem')return S+'\n\nMODE: POST-MORTEM ANALYSIS\n\nConversation:\n'+gv('conv')+'\n\nInstructions:\n1. Identify the exact moment the energy died — specific message if visible.\n2. Diagnose the core mistake in 1 honest sentence.\n3. 2-3 patterns: name / specific observation / psychological mechanism / concrete lesson.\n4. The one shift that would have changed the outcome.\n5. Actionable rule for the next match.';
   return S+'[Mode not found]';
 }
 
@@ -1018,6 +991,14 @@ function buildPrompt() {
     date_ideas:'Core principle: Novelty and shared experience — the best first dates create stories, not performances',
     what_bond:'Core principle: Mindset before message — knowing how Bond would think changes what you say and how you carry yourself',
     first_date_planner:'Core principle: Specificity and preparation — referencing real things from your conversation shows you listened, which is rarer than any clever line',
+    ghost_resurrection:'Core principle: Brevity signals confidence — re-enter as if time is irrelevant, not as if you need forgiveness',
+    apology:'Core principle: Non-neediness — own the mistake in one sentence, move forward without groveling',
+    social_media:'Core principle: Specificity — referencing what she posted creates connection; commenting on her looks just adds to the noise',
+    flake_handling:'Core principle: Scarcity — withdrawing the offer calmly is more attractive than chasing',
+    banter_escalation:'Core principle: Wit signals intelligence — playful friction creates tension that direct compliments never can',
+    post_hookup:'Core principle: Pacing — the morning after sets the frame for what comes next, handle it with calm warmth not urgency',
+    date_intel:'Core principle: Preparation meets presence — knowing what matters to her before you sit down lets you listen for it in the moment',
+    post_mortem:'Core principle: Learning over ego — honest diagnosis of what went wrong is the only way to improve',
   };
   var ptEl = document.getElementById('principle-tag');
   if(principles[selMode]){ptEl.textContent=principles[selMode];ptEl.style.display='block';}
@@ -1210,6 +1191,13 @@ var QK={
   vague_plans:['she keeps cancelling','wont commit','always busy','vague about when','never confirms'],
   what_bond:['what would bond do','what should i do','how should i handle','how would bond','bond approach'],
   first_date_planner:['first date plan','plan the date','date idea','what to bring','what to talk about on the date'],
+  ghost_resurrection:['ghosted me','dead thread','conversation died','bring back','re-open','she went silent months'],
+  apology:['i messed up','made a mistake','said something wrong','need to apologize','how to fix'],
+  social_media:['her story','her instagram','her post','reply to her ig','social media'],
+  flake_handling:['she said maybe','let me know','might be free','vague yes','she flaked'],
+  banter_escalation:['too friendly','platonic','how to flirt','add tension','turn flirty'],
+  post_hookup:['morning after','we hooked up','slept together','after intimacy','next day'],
+  date_intel:['prepare for date','date prep','what to talk about','she is coming','meeting her','date tonight','date tomorrow'],
 };
 var QFU={
   bond_reply:['What platform? (Tinder / Bumble / WhatsApp)','How long have you been talking?'],
