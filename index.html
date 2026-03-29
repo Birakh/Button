@@ -163,10 +163,14 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
       <input type="password" id="pat-input" placeholder="github_pat_xxxxxxxx..." style="font-size:14px;" onkeypress="if(event.key==='Enter')document.getElementById('pass-input').focus()">
     </div>
     <div class="unlock-field">
-      <label>Passphrase <span style="color:var(--t3);font-weight:300;text-transform:none;letter-spacing:0;">(your personal encryption key)</span></label>
+      <label>Passphrase <span style="color:var(--t3);font-weight:300;text-transform:none;letter-spacing:0;">(your encryption key)</span></label>
       <input type="password" id="pass-input" placeholder="Something memorable you won't forget..." style="font-size:14px;" onkeypress="if(event.key==='Enter')bootWithPAT()">
     </div>
-    <div style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;text-align:left;margin-bottom:14px;line-height:1.5;">PAT fetches your data from GitHub. Passphrase decrypts it. They are independent — rotate your PAT freely, your data stays decryptable.</div>
+    <div class="unlock-field">
+      <label>Repo <span style="color:var(--t3);font-weight:300;text-transform:none;letter-spacing:0;">(optional — leave blank to use Gist)</span></label>
+      <input type="text" id="repo-input" placeholder="username/repo-name" style="font-size:14px;" onkeypress="if(event.key==='Enter')bootWithPAT()">
+    </div>
+    <div style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;text-align:left;margin-bottom:14px;line-height:1.5;">PAT = GitHub access. Passphrase = encryption key. They are independent — rotate your PAT freely.</div>
     <button class="btn" onclick="bootWithPAT()">Unlock</button>
     <div id="pat-msg"></div>
     <div id="pat-status"></div>
@@ -564,6 +568,11 @@ async function bootWithPAT() {
   activePAT = pat;
   activePassphrase = passphrase;
   bondState.dossier.pat = pat;
+  // Set repo from unlock field so pull knows where to look
+  const repoInput = document.getElementById('repo-input');
+  if(repoInput && repoInput.value.trim()) {
+    bondState.dossier.repo = repoInput.value.trim();
+  }
 
   // Step 2: Try to pull + decrypt from GitHub
   status.textContent = 'Pulling encrypted vault from GitHub...';
@@ -573,11 +582,16 @@ async function bootWithPAT() {
     status.textContent = '✓ Vault decrypted. Loading...';
     setTimeout(bootApp, 300);
   } else {
-    // No cloud data yet — new vault
-    status.textContent = 'No vault found — creating new one...';
-    bondState = { dossier:{name:'',job:'',hobbies:'',pat,repo:'',gistId:''}, matches:[], archive:[] };
+    // Check if it was a decrypt failure vs no data found
+    // pullFromGist shows its own error for decrypt failures
+    // If status still says "Pulling...", it means no data was found
+    if(status.textContent.includes('Pulling')) {
+      status.textContent = 'No vault found — first time setup.';
+    }
+    const repoVal = repoInput ? repoInput.value.trim() : '';
+    bondState = { dossier:{name:'',job:'',hobbies:'',pat,repo:repoVal,gistId:''}, matches:[], archive:[] };
     bootApp();
-    setTimeout(() => { toggleDossier(); showN('Welcome! Fill in your profile.'); }, 400);
+    setTimeout(() => { toggleDossier(); showN('Fill in your profile to get started.'); }, 400);
   }
 }
 
@@ -591,6 +605,8 @@ function bootApp() {
   renderSaved();
   loadPrefs();
   buildCL();
+  // Log what was loaded for debugging
+  console.log('[BondSuite] Booted. Matches:', bondState.matches.length, '| Name:', bondState.dossier.name, '| Repo:', bondState.dossier.repo);
 }
 
 function populateDossierFields() {
@@ -666,6 +682,7 @@ async function pullFromGist(btnEl, silent=false) {
   let {pat, repo, gistId} = bondState.dossier;
   pat = pat || activePAT;
   if(!pat) { if(!silent) showN('Add your PAT in ⚙️ Dossier first.'); return false; }
+  console.log('[BondSuite] Pulling — repo:', repo||'(none, using gist)', '| gistId:', gistId||'(none)');
   const btn = btnEl || null;
   const origText = btn ? btn.textContent : '';
   if(btn) btn.textContent = 'Pulling...';
