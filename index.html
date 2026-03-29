@@ -132,14 +132,14 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .ctext{font-size:13px;color:var(--t2);line-height:1.5;}
 .ctext strong{color:var(--t);font-weight:500;}
 /* PAT Unlock Screen */
-#pat-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}
-#pat-screen .pat-box{background:var(--bg2);border:1px solid var(--ac);border-radius:var(--rl);padding:28px 20px;width:100%;max-width:360px;text-align:center;}
+#pat-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;}
+#pat-screen .pat-box{background:var(--bg2);border:1px solid var(--ac);border-radius:var(--rl);padding:28px 20px;width:100%;max-width:380px;text-align:center;margin:auto;}
 #pat-msg{color:var(--rd);font-size:12px;margin-top:8px;min-height:18px;font-family:'SF Mono',monospace;}
 #pat-status{font-size:12px;margin-top:8px;font-family:'SF Mono',monospace;color:var(--t3);}
 /* Modals & Lock Screen */
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;}
 .modal-overlay.on{display:flex;}
-.modal-content{background:var(--bg2);border:1px solid var(--bo);border-radius:var(--rl);padding:20px;width:100%;max-width:400px;}
+.modal-content{background:var(--bg2);border:1px solid var(--bo);border-radius:var(--rl);padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 #lock-msg{color:var(--rd);font-size:12px;margin-top:8px;min-height:18px;}
 /* Stealth Mode */
 body.stealth-mode{background:#ffffff !important;color:#111 !important;font-family:'Arial',sans-serif !important;}
@@ -585,6 +585,8 @@ function bootApp() {
   document.getElementById('pat-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
   populateDossierFields();
+  initStealthMode();
+  buildModeGrid();
   renderMatches();
   renderSaved();
   loadPrefs();
@@ -736,15 +738,19 @@ async function testGitHubPAT() {
 
 // ==== STEALTH MODE ====
 let lastTap = 0;
-document.getElementById('main-hdr').addEventListener('click', function() {
-  let now = new Date().getTime();
-  let gap = now - lastTap;
-  if(gap < 500 && gap > 0) {
-    document.body.classList.toggle('stealth-mode');
-    showN(document.body.classList.contains('stealth-mode') ? 'Stealth Engaged' : 'Stealth Disabled');
-  }
-  lastTap = now;
-});
+function initStealthMode() {
+  const hdr = document.getElementById('main-hdr');
+  if(!hdr) return;
+  hdr.addEventListener('click', function() {
+    let now = new Date().getTime();
+    let gap = now - lastTap;
+    if(gap < 500 && gap > 0) {
+      document.body.classList.toggle('stealth-mode');
+      showN(document.body.classList.contains('stealth-mode') ? 'Stealth Engaged' : 'Stealth Disabled');
+    }
+    lastTap = now;
+  });
+}
 
 // ==== MATCH MANAGEMENT ====
 function showNewMatchUI(){document.getElementById('new-match-ui').style.display='block';}
@@ -1147,9 +1153,11 @@ var FLD={
   date_intel_when:{l:'When is the date?',t:'sel',o:['Today','Tomorrow','In 2-3 days','This weekend','Next week']},
 };
 
-// Build mode grid
-(function(){
+// Build mode grid — deferred so DOM is ready
+function buildModeGrid() {
   var g = document.getElementById('mode-grid');
+  if(!g) return;
+  g.innerHTML = '';
   MODES.forEach(function(m){
     var b = document.createElement('button');
     b.className = 'mcard'; b.setAttribute('data-id', m.id);
@@ -1157,7 +1165,7 @@ var FLD={
     b.onclick = function(){selMode2(m.id);};
     g.appendChild(b);
   });
-})();
+}
 
 function filterModes(q) {
   var cards = document.querySelectorAll('.mcard');
@@ -1666,7 +1674,7 @@ try{if('serviceWorker' in navigator){
   var blob=new Blob([sw_code],{type:'application/javascript'});
   var swUrl=URL.createObjectURL(blob);
   navigator.serviceWorker.register(swUrl).then(function(reg){
-    reg.addEventListener('updatefound',function(){var nw=reg.installing;nw.addEventListener('statechange',function(){if(nw.state==='installed'&&navigator.serviceWorker.controller){showN('Update available — reload to get latest version');}});});
+    reg.addEventListener('updatefound',function(){var nw=reg.installing;nw.addEventListener('statechange',function(){if(nw.state==='installed'&&navigator.serviceWorker.controller){const n=document.getElementById('notif');if(n){n.textContent='Update available — reload';n.style.display='block';setTimeout(()=>n.style.display='none',4000);}}});});
   }).catch(function(){});
 }}catch(e){}
 </script>
