@@ -189,7 +189,8 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
 <div class="top-nav">
   <button class="tnav-btn on" onclick="swMain('matches',this)">Matches</button>
   <button class="tnav-btn" onclick="swMain('prompts',this)">Prompts</button>
-  <button class="tnav-btn" onclick="swMain('reference',this)">Reference</button>
+  <button class="tnav-btn" onclick="swMain('dateprep',this)">Date Prep</button>
+  <button class="tnav-btn" onclick="swMain('reference',this)">Ref</button>
 </div>
 
 <!-- ===== MATCHES PANE ===== -->
@@ -443,6 +444,195 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
   </div>
 </div>
 </div><!-- end reference -->
+<!-- ===== DATE PREP PANE ===== -->
+<div class="mpane" id="mp-dateprep">
+
+<div class="card">
+  <div class="ctag">Select Match</div>
+  <div class="row">
+    <label>Who is this for?</label>
+    <select id="dp-match-select" onchange="dpLoadMatch(this.value)">
+      <option value="">— choose a match —</option>
+    </select>
+  </div>
+  <div id="dp-match-info" style="display:none;background:var(--bg3);border-radius:var(--r);padding:10px 13px;font-size:12px;color:var(--t2);font-family:'SF Mono',monospace;line-height:1.6;"></div>
+</div>
+
+<div id="dp-content" style="display:none;">
+
+  <!-- Sub-tabs -->
+  <div class="rtabs" style="margin-bottom:14px;">
+    <button class="rtab on" id="dp-tab-first" onclick="dpSwTab('first',this)">First Date</button>
+    <button class="rtab" id="dp-tab-second" onclick="dpSwTab('second',this)">Second Date+</button>
+  </div>
+
+  <!-- ===== FIRST DATE ===== -->
+  <div id="dp-pane-first">
+
+    <div class="card">
+      <div class="ctag">Date Details</div>
+      <div class="r2">
+        <div class="row"><label>Where</label><input type="text" id="dp-venue" placeholder="e.g. Café Hawelka, 1st district"></div>
+        <div class="row"><label>When</label><select id="dp-when"><option>Tonight</option><option>Tomorrow</option><option>This weekend</option><option>Today afternoon</option><option>This evening</option></select></div>
+      </div>
+      <div class="row"><label>Any last context <span class="op">(optional)</span></label><textarea id="dp-ctx" rows="2" placeholder="e.g. She confirmed last minute, seemed nervous. Or: she went quiet for 2 days then came back warm..."></textarea></div>
+    </div>
+
+    <div class="card">
+      <div class="ctag">Conversation History</div>
+      <div class="row">
+        <label>Bumble / Tinder / Hinge chat</label>
+        <textarea id="dp-conv-app" rows="5" placeholder="Paste the full app conversation here..."></textarea>
+      </div>
+      <div class="row" style="margin-top:4px;">
+        <label>WhatsApp <span class="op">(if you moved there)</span></label>
+        <textarea id="dp-conv-wa" rows="5" placeholder="Paste WhatsApp conversation here (optional — paste as exported .txt or manually)..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn" onclick="dpBuildFirst()">Generate First Date Prep</button>
+
+    <div class="out-wrap" id="dp-out-first" style="margin-top:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="otag">First Date Brief</span>
+        <span style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;">tap to select all</span>
+      </div>
+      <div class="pbox" id="dp-pbox-first" onclick="selectPrompt(this)" style="max-height:600px;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn" onclick="dpCopy('dp-pbox-first')" style="flex:2;">Copy</button>
+        <button class="btn2" onclick="document.getElementById('dp-out-first').className='out-wrap';document.getElementById('dp-pbox-first').textContent='';" style="flex:1;">Clear</button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;margin:12px 0 6px;">PASTE INTO</div>
+      <div class="pt-row">
+        <a class="pt" href="https://claude.ai" target="_blank"><span class="pdot" style="background:#c8a96e;"></span>Claude</a>
+        <a class="pt" href="https://chat.openai.com" target="_blank"><span class="pdot" style="background:#10a37f;"></span>ChatGPT</a>
+        <a class="pt" href="https://gemini.google.com" target="_blank"><span class="pdot" style="background:#4285f4;"></span>Gemini</a>
+      </div>
+    </div>
+
+  </div><!-- end first date pane -->
+
+  <!-- ===== SECOND DATE+ ===== -->
+  <div id="dp-pane-second" style="display:none;">
+
+    <!-- Date log history -->
+    <div class="card">
+      <div class="ctag">Date History</div>
+      <div id="dp-date-history"><div style="font-size:13px;color:var(--t3);">No dates logged yet.</div></div>
+    </div>
+
+    <!-- Log a date -->
+    <div class="card">
+      <div class="ctag">Log a Date</div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <div style="flex:1;min-width:120px;">
+          <label>Date number</label>
+          <select id="dp-log-num">
+            <option value="1">1st date</option>
+            <option value="2" selected>2nd date</option>
+            <option value="3">3rd date</option>
+            <option value="4">4th date+</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:120px;">
+          <label>Venue</label>
+          <input type="text" id="dp-log-venue" placeholder="e.g. Bar Campari">
+        </div>
+      </div>
+
+      <!-- Quick signal chips -->
+      <div class="row">
+        <label>Overall vibe</label>
+        <div class="chip-row" id="dp-log-vibe-chips">
+          <button class="chip" data-v="Awkward" onclick="tgSingleChip(this,'dp-log-vibe-chips')">Awkward</button>
+          <button class="chip" data-v="Flat" onclick="tgSingleChip(this,'dp-log-vibe-chips')">Flat</button>
+          <button class="chip" data-v="Good" onclick="tgSingleChip(this,'dp-log-vibe-chips')">Good</button>
+          <button class="chip" data-v="Great" onclick="tgSingleChip(this,'dp-log-vibe-chips')">Great</button>
+          <button class="chip" data-v="Electric" onclick="tgSingleChip(this,'dp-log-vibe-chips')">Electric</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <label>Physical</label>
+        <div class="chip-row" id="dp-log-phys-chips">
+          <button class="chip" data-v="Nothing" onclick="tgSingleChip(this,'dp-log-phys-chips')">Nothing</button>
+          <button class="chip" data-v="Held hands" onclick="tgSingleChip(this,'dp-log-phys-chips')">Held hands</button>
+          <button class="chip" data-v="Kiss" onclick="tgSingleChip(this,'dp-log-phys-chips')">Kiss</button>
+          <button class="chip" data-v="More" onclick="tgSingleChip(this,'dp-log-phys-chips')">More</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <label>She initiated contact after</label>
+        <div class="chip-row" id="dp-log-init-chips">
+          <button class="chip" data-v="Yes — quickly" onclick="tgSingleChip(this,'dp-log-init-chips')">Yes — quickly</button>
+          <button class="chip" data-v="Yes — next day" onclick="tgSingleChip(this,'dp-log-init-chips')">Yes — next day</button>
+          <button class="chip" data-v="I initiated" onclick="tgSingleChip(this,'dp-log-init-chips')">I initiated</button>
+          <button class="chip" data-v="No contact yet" onclick="tgSingleChip(this,'dp-log-init-chips')">No contact yet</button>
+        </div>
+      </div>
+
+      <!-- Guided freeform fields -->
+      <div class="row">
+        <label>How did it go overall?</label>
+        <textarea id="dp-log-overall" rows="3" placeholder="e.g. Really good energy — she was way more relaxed than on chat. Laughed a lot. Kissed at the end, she seemed into it. Slightly nervous at the start but warmed up fast..."></textarea>
+      </div>
+      <div class="row">
+        <label>What landed — topics, moments, lines that worked</label>
+        <textarea id="dp-log-landed" rows="2" placeholder="e.g. The Japan story, making fun of the wine list, asking about Miso her dog — she lit up..."></textarea>
+      </div>
+      <div class="row">
+        <label>What fell flat or to avoid next time</label>
+        <textarea id="dp-log-avoid" rows="2" placeholder="e.g. Asked about her family too early, she got quiet. Venue was too loud after 10pm..."></textarea>
+      </div>
+      <div class="row">
+        <label>How did she message after?</label>
+        <textarea id="dp-log-after" rows="2" placeholder="e.g. She texted 20 min later — 'had such a good time tonight'. Warm tone, used my name..."></textarea>
+      </div>
+      <div class="row">
+        <label>Anything else to remember</label>
+        <textarea id="dp-log-notes" rows="2" placeholder="e.g. She mentioned wanting to try that Thai place in the 7th. She has a work thing Friday..."></textarea>
+      </div>
+
+      <button class="btn" onclick="dpSaveLog()">Save Date Log</button>
+    </div>
+
+    <!-- Second date prep -->
+    <div class="card">
+      <div class="ctag">Generate Next Date Prep</div>
+      <div class="r2">
+        <div class="row"><label>Where next</label><input type="text" id="dp2-venue" placeholder="e.g. Dinner at Figlmüller"></div>
+        <div class="row"><label>When</label><select id="dp2-when"><option>Tonight</option><option>Tomorrow</option><option>This weekend</option><option>This evening</option></select></div>
+      </div>
+      <div class="row"><label>New conversation since last date <span class="op">(optional)</span></label><textarea id="dp2-conv" rows="4" placeholder="Paste any WhatsApp or app messages since the last date..."></textarea></div>
+      <button class="btn" onclick="dpBuildSecond()" style="margin-top:4px;">Generate Date Prep</button>
+    </div>
+
+    <div class="out-wrap" id="dp-out-second" style="margin-top:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="otag" id="dp-out-second-tag">Date Prep</span>
+        <span style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;">tap to select all</span>
+      </div>
+      <div class="pbox" id="dp-pbox-second" onclick="selectPrompt(this)" style="max-height:600px;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn" onclick="dpCopy('dp-pbox-second')" style="flex:2;">Copy</button>
+        <button class="btn2" onclick="document.getElementById('dp-out-second').className='out-wrap';document.getElementById('dp-pbox-second').textContent='';" style="flex:1;">Clear</button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;margin:12px 0 6px;">PASTE INTO</div>
+      <div class="pt-row">
+        <a class="pt" href="https://claude.ai" target="_blank"><span class="pdot" style="background:#c8a96e;"></span>Claude</a>
+        <a class="pt" href="https://chat.openai.com" target="_blank"><span class="pdot" style="background:#10a37f;"></span>ChatGPT</a>
+        <a class="pt" href="https://gemini.google.com" target="_blank"><span class="pdot" style="background:#4285f4;"></span>Gemini</a>
+      </div>
+    </div>
+
+  </div><!-- end second date pane -->
+
+</div><!-- end dp-content -->
+</div><!-- end dateprep pane -->
+
+
 
 </div><!-- end app -->
 <div class="notif" id="notif"></div>
@@ -601,6 +791,7 @@ function bootApp() {
   populateDossierFields();
   initStealthMode();
   buildModeGrid();
+  dpPopulateDropdown();
   renderMatches();
   renderSaved();
   loadPrefs();
@@ -923,10 +1114,12 @@ function renderMatches() {
   let h='';
   bondState.matches.forEach(m=>{
     let isAct=(currentActiveMatch&&currentActiveMatch.id===m.id)?'border-color:var(--ac);background:rgba(200,169,110,.05);':'';
-    const stats = [m.height, m.sign, m.edu, m.drink].filter(Boolean).join(' · ');
+    const stats = [m.height, m.sign, m.edu, m.drink&&m.drink!=='—'?m.drink:null].filter(Boolean).join(' · ');
+    const dateCount = (m.dates||[]).length;
+    const badge = dateCount>0?'<span style="font-size:10px;background:rgba(200,169,110,.15);color:var(--ac);border:.5px solid rgba(200,169,110,.3);border-radius:10px;padding:2px 7px;font-family:monospace;margin-left:6px;">'+dateCount+' date'+(dateCount>1?'s':'')+'</span>':'';
     h+=`<div class="sitem" style="${isAct}" onclick="loadMatch('${m.id}')">
       <div style="flex:1;">
-        <div class="sname">${m.name}</div>
+        <div class="sname" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">${m.name}${badge}</div>
         <div class="ssub">${m.platform} · ${m.status}</div>
         ${stats?'<div style="font-size:11px;color:var(--t3);margin-top:2px;">'+stats+'</div>':''}
       </div>
@@ -1624,6 +1817,333 @@ function applyQ(id) {
   document.getElementById('qi').value='';
 }
 
+// ==== DATE PREP ====
+let dpActiveMatch = null;
+
+function dpPopulateDropdown() {
+  const sel = document.getElementById('dp-match-select');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— choose a match —</option>';
+  bondState.matches.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    const dateCount = (m.dates||[]).length;
+    opt.textContent = m.name + (dateCount ? ' ('+dateCount+' date'+(dateCount>1?'s':'')+')' : '');
+    if(m.id === cur) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function dpLoadMatch(id) {
+  dpActiveMatch = bondState.matches.find(m => m.id === id) || null;
+  const content = document.getElementById('dp-content');
+  const info = document.getElementById('dp-match-info');
+  if(!dpActiveMatch) { content.style.display='none'; info.style.display='none'; return; }
+  content.style.display = 'block';
+  // Build profile summary
+  const m = dpActiveMatch;
+  const stats = [m.height, m.sign, m.edu,
+    m.drink&&m.drink!=='—'?(m.drink==='Never'?'Non-drinker':m.drink):null,
+    m.location
+  ].filter(Boolean).join(' · ');
+  info.style.display = 'block';
+  info.innerHTML = '<strong style="color:var(--ac);">'+m.name+'</strong> · '+m.platform+' · '+m.status
+    + (stats?'<br>'+stats:'')
+    + (m.bio?'<br><span style="color:var(--t);">'+m.bio.slice(0,120)+(m.bio.length>120?'...':'')+'</span>':'');
+  // Render date history
+  dpRenderHistory();
+  // Set default log number to next date
+  const nextNum = (m.dates||[]).length + 1;
+  const numSel = document.getElementById('dp-log-num');
+  if(numSel) {
+    for(let o of numSel.options) { if(parseInt(o.value)===nextNum||(nextNum>4&&o.value==='4')) { numSel.value=o.value; break; } }
+  }
+}
+
+function dpSwTab(tab, el) {
+  document.getElementById('dp-pane-first').style.display = tab==='first'?'block':'none';
+  document.getElementById('dp-pane-second').style.display = tab==='second'?'block':'none';
+  document.querySelectorAll('#mp-dateprep .rtab').forEach(b=>b.className='rtab');
+  el.className='rtab on';
+}
+
+function tgSingleChip(el, groupId) {
+  const group = document.getElementById(groupId);
+  if(!group) return;
+  const wasOn = el.className.includes(' on');
+  group.querySelectorAll('.chip').forEach(c=>c.className='chip');
+  if(!wasOn) el.className='chip on';
+}
+
+function dpGetChip(groupId) {
+  const group = document.getElementById(groupId);
+  if(!group) return '';
+  const on = group.querySelector('.chip.on');
+  return on ? on.getAttribute('data-v') : '';
+}
+
+function dpBuildFirst() {
+  if(!dpActiveMatch) { showN('Select a match first'); return; }
+  const m = dpActiveMatch;
+  const venue = document.getElementById('dp-venue').value.trim();
+  const when = document.getElementById('dp-when').value;
+  const ctx = document.getElementById('dp-ctx').value.trim();
+  const convApp = document.getElementById('dp-conv-app').value.trim();
+  const convWA = document.getElementById('dp-conv-wa').value.trim();
+  if(!venue) { showN('Add venue/location'); return; }
+  if(!convApp && !convWA) { showN('Paste at least one conversation'); return; }
+
+  // Build her profile string
+  const dos = bondState.dossier;
+  const profileParts = [];
+  const stats = [m.height, m.sign, m.edu,
+    m.drink&&m.drink!=='—'?(m.drink==='Never'?'Non-drinker':m.drink+' drinker'):null,
+    m.smoke&&m.smoke!=='—'&&m.smoke!=='Never'?m.smoke+' smoker':m.smoke==='Never'?'Non-smoker':null
+  ].filter(Boolean);
+  if(stats.length) profileParts.push('Stats: '+stats.join(', '));
+  if(m.location) profileParts.push('Location: '+m.location);
+  if(m.bio) profileParts.push('About her: '+m.bio);
+  if(m.prompts&&m.prompts.length) {
+    m.prompts.forEach(p=>{ if(p.q||p.a) profileParts.push('"'+p.q+'": '+p.a); });
+  }
+
+  // Build your profile string
+  const myParts = [];
+  if(dos.name) myParts.push('Name: '+dos.name);
+  if(dos.age) myParts.push('Age: '+dos.age);
+  if(dos.height) myParts.push('Height: '+dos.height);
+  if(dos.job) myParts.push('Job: '+dos.job);
+  if(dos.city) myParts.push('City: '+dos.city);
+  if(dos.hobbies) myParts.push('Hobbies: '+dos.hobbies);
+  if(dos.about) myParts.push('About: '+dos.about);
+
+  const prompt = `You are Bond Suite — a dating coach inspired by Daniel Craig-era James Bond. Confident, specific, dry, never theatrical. Generate a first date preparation brief.
+
+CONTEXT
+User: ${myParts.join(' | ')||'Not specified'}
+Her name: ${m.name}
+Her profile: ${profileParts.join(' | ')||'Not specified'}
+Date: ${when} at ${venue}${ctx?'\nLast context: '+ctx:''}
+
+${convApp?'APP CONVERSATION (Bumble/Tinder/Hinge):\n'+convApp+'\n':''}
+${convWA?'WHATSAPP CONVERSATION:\n'+convWA+'\n':''}
+
+Generate the following sections in order. Be specific to this person — no generic advice. Every suggestion must be grounded in something real from her profile or the conversation.
+
+---
+
+1. PROFILE READ
+Who she actually is. Personality read from profile + how she writes. Any gap between her profile persona and her real chat energy. What she's probably like in person. Keep it sharp — 4-6 sentences max.
+
+2. CONVERSATION READ
+Energy analysis across both threads. Who's been leading. Investment balance. What she's revealed without meaning to. Any shift in tone or energy. One sentence on where things stand right now.
+
+3. OPENING ENERGY
+How to carry yourself with THIS specific person tonight — calibrated to her personality, not generic confidence advice. One paragraph. What she responds to. What would feel performative to her.
+
+4. THE FIRST 5 MINUTES — step by step
+This is the most important section.
+- Arrival: what energy to walk in with
+- The hug: how to make it natural (assume hug)
+- First 30 seconds: not a script — a direction. What to observe, what not to say
+- The settling-in moment (sitting down, menu, ordering) — how Bond handles the awkward transition
+- The first real thing to say that opens the actual conversation. Statement, not question.
+
+5. FOUR OPENING LINES
+Each must reference something specific from her profile or conversation — no generic lines. Label each by what it does:
+A) Observational (about the moment/venue/something you notice about her)
+B) Callback (references something from your conversation specifically)
+C) Playful challenge (light friction — Bond's energy, never mean)
+D) Warm and direct (genuine, grounded, slightly disarming)
+For each: the line, and one sentence on why it works for her specifically.
+
+6. TALKING POINTS + HOW TO OPEN THEM
+3-4 conversation threads worth going deeper on. For each:
+- The topic
+- Why it works for her specifically
+- One Bond-style opening (statement not question where possible)
+- One follow-up if she engages
+
+7. TOPICS TO AVOID
+What's already exhausted, what felt flat in chat, what creates pressure too early. Be specific.
+
+8. LANGUAGE NOTE
+She's Austrian, you're in Vienna. When and how to naturally shift to German or English based on the vibe. Bond reads the room — never forced.
+
+9. HOW TO CLOSE
+End of date energy for this specific dynamic. Whether to suggest the next date at the venue or after. What to say and what not to say. One specific line for suggesting a second date that fits their dynamic.`;
+
+  document.getElementById('dp-pbox-first').textContent = prompt;
+  document.getElementById('dp-out-first').className = 'out-wrap on';
+  setTimeout(()=>document.getElementById('dp-out-first').scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
+
+function dpSaveLog() {
+  if(!dpActiveMatch) { showN('Select a match first'); return; }
+  const vibe = dpGetChip('dp-log-vibe-chips');
+  const physical = dpGetChip('dp-log-phys-chips');
+  const initiated = dpGetChip('dp-log-init-chips');
+  const num = document.getElementById('dp-log-num').value;
+  const venue = document.getElementById('dp-log-venue').value.trim();
+  const overall = document.getElementById('dp-log-overall').value.trim();
+  const landed = document.getElementById('dp-log-landed').value.trim();
+  const avoid = document.getElementById('dp-log-avoid').value.trim();
+  const after = document.getElementById('dp-log-after').value.trim();
+  const notes = document.getElementById('dp-log-notes').value.trim();
+  if(!overall && !vibe) { showN('Add at least a vibe or overall note'); return; }
+
+  if(!dpActiveMatch.dates) dpActiveMatch.dates = [];
+  dpActiveMatch.dates.push({
+    id: Date.now().toString(),
+    number: parseInt(num),
+    venue, vibe, physical, initiated, overall, landed, avoid, after, notes,
+    when: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})
+  });
+
+  // Clear log fields
+  ['dp-log-venue','dp-log-overall','dp-log-landed','dp-log-avoid','dp-log-after','dp-log-notes'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  ['dp-log-vibe-chips','dp-log-phys-chips','dp-log-init-chips'].forEach(gid=>{
+    const g=document.getElementById(gid); if(g) g.querySelectorAll('.chip').forEach(c=>c.className='chip');
+  });
+
+  saveStateLocally(); forceGistSync();
+  dpRenderHistory();
+  dpPopulateDropdown(); // refresh badge
+  showN('Date logged & saved.');
+}
+
+function dpRenderHistory() {
+  const el = document.getElementById('dp-date-history');
+  if(!el||!dpActiveMatch) return;
+  const dates = dpActiveMatch.dates||[];
+  if(!dates.length){el.innerHTML='<div style="font-size:13px;color:var(--t3);">No dates logged yet.</div>';return;}
+  const vibeColor={'Awkward':'var(--rd)','Flat':'var(--t3)','Good':'var(--yl)','Great':'var(--gr)','Electric':'var(--ac)'};
+  let h='';
+  [...dates].reverse().forEach(d=>{
+    const vc=vibeColor[d.vibe]||'var(--t2)';
+    h+=`<div style="border:.5px solid var(--bo);border-radius:var(--r);padding:12px 13px;margin-bottom:8px;background:var(--bg3);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:12px;font-weight:500;color:var(--t);">Date ${d.number}${d.venue?' — '+d.venue:''}</span>
+        <span style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;">${d.when||''}</span>
+        ${d.vibe?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.05);color:'+vc+';font-family:\'SF Mono\',monospace;">'+d.vibe+'</span>':''}
+        ${d.physical&&d.physical!=='Nothing'?'<span style="font-size:10px;color:var(--t3);font-family:\'SF Mono\',monospace;">'+d.physical+'</span>':''}
+      </div>
+      ${d.overall?'<div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:4px;">'+d.overall+'</div>':''}
+      ${d.landed?'<div style="font-size:12px;color:var(--gr);font-family:\'SF Mono\',monospace;margin-top:4px;">✓ '+d.landed+'</div>':''}
+      ${d.avoid?'<div style="font-size:12px;color:var(--rd);font-family:\'SF Mono\',monospace;margin-top:2px;">✗ '+d.avoid+'</div>':''}
+      ${d.after?'<div style="font-size:12px;color:var(--t3);font-family:\'SF Mono\',monospace;margin-top:4px;">After: '+d.after+'</div>':''}
+      ${d.notes?'<div style="font-size:12px;color:var(--t3);font-family:\'SF Mono\',monospace;margin-top:2px;">📌 '+d.notes+'</div>':''}
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+
+function dpBuildSecond() {
+  if(!dpActiveMatch) { showN('Select a match first'); return; }
+  const m = dpActiveMatch;
+  const venue = document.getElementById('dp2-venue').value.trim();
+  const when = document.getElementById('dp2-when').value;
+  const newConv = document.getElementById('dp2-conv').value.trim();
+  const dates = m.dates||[];
+  if(!dates.length) { showN('Log at least one date first'); return; }
+  if(!venue) { showN('Add venue for next date'); return; }
+
+  const dos = bondState.dossier;
+  // Build profile string
+  const profileParts = [];
+  const stats=[m.height,m.sign,m.edu,m.drink&&m.drink!=='—'?m.drink:null].filter(Boolean);
+  if(stats.length) profileParts.push('Stats: '+stats.join(', '));
+  if(m.bio) profileParts.push('About her: '+m.bio);
+  if(m.prompts&&m.prompts.length) m.prompts.forEach(p=>{if(p.q||p.a)profileParts.push('"'+p.q+'": '+p.a);});
+
+  // Build date history string
+  const historyStr = dates.map(d=>{
+    const parts=['Date '+d.number+(d.when?' ('+d.when+')':'')+(d.venue?' at '+d.venue:'')];
+    if(d.vibe) parts.push('Vibe: '+d.vibe);
+    if(d.physical&&d.physical!=='Nothing') parts.push('Physical: '+d.physical);
+    if(d.initiated) parts.push('She initiated after: '+d.initiated);
+    if(d.overall) parts.push('How it went: '+d.overall);
+    if(d.landed) parts.push('What landed: '+d.landed);
+    if(d.avoid) parts.push('What fell flat: '+d.avoid);
+    if(d.after) parts.push('Her message after: '+d.after);
+    if(d.notes) parts.push('Notes: '+d.notes);
+    return parts.join('\n');
+  }).join('\n\n---\n\n');
+
+  const nextDateNum = dates.length + 1;
+
+  const prompt = `You are Bond Suite — a dating coach inspired by Daniel Craig-era James Bond. Confident, specific, dry, never theatrical. Generate a date preparation brief.
+
+CONTEXT
+User: ${[dos.name,dos.job,dos.city].filter(Boolean).join(' | ')||'Not specified'}
+Her name: ${m.name}
+Her profile: ${profileParts.join(' | ')||'Not specified'}
+Upcoming date: Date ${nextDateNum} — ${when} at ${venue}
+
+FULL DATE HISTORY:
+${historyStr}
+
+${newConv?'NEW CONVERSATION SINCE LAST DATE:\n'+newConv+'\n':''}
+
+Generate the following. Everything must be calibrated to the actual history and dynamic — no generic advice.
+
+---
+
+1. DYNAMIC READ
+Where do things stand right now. How the dynamic has evolved across all logged dates. Who's leading, what's been established, what's still unresolved. One paragraph — sharp and honest.
+
+2. WHAT'S ALREADY BEEN BUILT
+What you don't need to re-establish. Topics exhausted. What she already knows about you. What the physical dynamic is. What frame has been set.
+
+3. OPENING ENERGY FOR DATE ${nextDateNum}
+How this date should feel different from the last one. Where to take the energy. Bond calibrates — he doesn't repeat himself.
+
+4. THE FIRST 5 MINUTES
+- Greeting energy (assume hug) — how warm, how held
+- First 30 seconds — what to observe, what to say or not say
+- The settling-in moment — how to handle it at this stage of the dynamic
+- The first real thing to say that picks up where you left off naturally
+
+5. FOUR OPENING LINES
+Specific to where you are now — not first date openers. Calibrated to the established dynamic.
+A) Callbacks something from the last date naturally
+B) Teasing or light challenge — escalates the established dynamic
+C) Something that shows you've been paying attention to something small she said
+D) Warm and grounding — for if the energy needs settling
+
+6. TALKING POINTS
+3-4 threads worth exploring on date ${nextDateNum}. Not repeats of what's already been covered. For each:
+- Topic
+- Why now, why this person
+- Bond-style opener
+
+7. WHAT TO AVOID
+Based on what fell flat or created distance before. Be specific.
+
+8. LANGUAGE NOTE
+When and how to shift between German and English naturally — read the room, Bond style.
+
+9. PROGRESSION
+What date ${nextDateNum} should accomplish in terms of the dynamic. What direction things should move in. How to handle if she brings up where this is going.
+
+10. HOW TO CLOSE
+How to end date ${nextDateNum} given where things are. What comes next. One specific line for whatever the natural next step is.`;
+
+  document.getElementById('dp-out-second-tag').textContent = 'Date '+nextDateNum+' Brief';
+  document.getElementById('dp-pbox-second').textContent = prompt;
+  document.getElementById('dp-out-second').className = 'out-wrap on';
+  setTimeout(()=>document.getElementById('dp-out-second').scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
+
+function dpCopy(boxId) {
+  const t = document.getElementById(boxId).textContent;
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>showN('Copied'));
+  else { const el=document.getElementById(boxId); const sel=window.getSelection(),r=document.createRange(); r.selectNodeContents(el);sel.removeAllRanges();sel.addRange(r); try{document.execCommand('copy');showN('Copied');}catch(e){showN('Select text manually');} }
+}
+
 // ==== NAV ====
 function swMain(id, el) {
   document.querySelectorAll('.mpane').forEach(function(p){p.className='mpane';});
@@ -1631,6 +2151,7 @@ function swMain(id, el) {
   document.getElementById('mp-'+id).className='mpane on';
   el.className='tnav-btn on';
   window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='dateprep') dpPopulateDropdown();
 }
 function swRef(id, el) {
   document.querySelectorAll('.rpane').forEach(function(p){p.className='rpane';});
