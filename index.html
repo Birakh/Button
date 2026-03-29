@@ -202,13 +202,41 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
       <button class="btn2 btn-sm" onclick="forceGistSync(this)" id="sync-btn" style="flex:1.5;">↑ Push</button>
     </div>
     <div id="new-match-ui" style="display:none;margin-top:12px;border-top:1px solid var(--bo);padding-top:12px;">
-      <div class="row"><label>Her Name</label><input type="text" id="nm_name" placeholder="e.g. Sara"></div>
-      <div class="r2">
-        <div class="row"><label>Platform</label><select id="nm_plat"><option>Bumble</option><option>Tinder</option><option>Hinge</option><option>WhatsApp</option><option>IG</option></select></div>
-        <div class="row"><label>Status</label><select id="nm_status"><option>Chatting</option><option>Number Secured</option><option>Date Planned</option><option>Post-Date</option></select></div>
+      <!-- Scraper paste & parse -->
+      <div class="row">
+        <label>Paste scraper output <span class="op">(auto-fills fields below)</span></label>
+        <textarea id="nm_scraper" rows="4" placeholder="Paste === BUMBLE PROFILE === output here and hit Parse..."></textarea>
+        <button class="btn2 btn-sm" onclick="parseScraper()" style="margin-top:6px;width:100%;">⚡ Parse Profile</button>
       </div>
-      <div class="row"><label>Intel / Bio / Vibe</label><textarea id="nm_bio" rows="2" placeholder="Loves dogs, dry humor, works in tech..."></textarea></div>
-      <button class="btn2" onclick="saveNewMatch()">Save Match</button>
+      <div class="div"></div>
+      <!-- Basic -->
+      <div class="r2">
+        <div class="row"><label>Her Name</label><input type="text" id="nm_name" placeholder="e.g. Sara"></div>
+        <div class="row"><label>Platform</label><select id="nm_plat"><option>Bumble</option><option>Tinder</option><option>Hinge</option><option>WhatsApp</option><option>IG</option></select></div>
+      </div>
+      <div class="row"><label>Status</label><select id="nm_status"><option>Chatting</option><option>Number Secured</option><option>Date Planned</option><option>Post-Date</option></select></div>
+      <!-- Stats -->
+      <div class="r2">
+        <div class="row"><label>Height <span class="op">(optional)</span></label><input type="text" id="nm_height" placeholder="e.g. 175 cm"></div>
+        <div class="row"><label>Star Sign <span class="op">(optional)</span></label><input type="text" id="nm_sign" placeholder="e.g. Sagittarius"></div>
+      </div>
+      <div class="r2">
+        <div class="row"><label>Education <span class="op">(optional)</span></label><select id="nm_edu"><option value="">—</option><option>High school</option><option>Some college</option><option>Bachelor's degree</option><option>Graduate degree</option><option>PhD</option></select></div>
+        <div class="row"><label>Drinking <span class="op">(optional)</span></label><select id="nm_drink"><option value="">—</option><option>Never</option><option>Rarely</option><option>Socially</option><option>Often</option></select></div>
+      </div>
+      <div class="r2">
+        <div class="row"><label>Smoking <span class="op">(optional)</span></label><select id="nm_smoke"><option value="">—</option><option>Never</option><option>Rarely</option><option>Socially</option><option>Yes</option></select></div>
+        <div class="row"><label>Location / Distance <span class="op">(optional)</span></label><input type="text" id="nm_loc" placeholder="e.g. Vienna ~5 km"></div>
+      </div>
+      <!-- About -->
+      <div class="row"><label>About her</label><textarea id="nm_bio" rows="3" placeholder="Her bio text..."></textarea></div>
+      <!-- Dynamic Q&A prompts -->
+      <div class="row">
+        <label>Profile prompts <span class="op">(e.g. The way to my heart is...)</span></label>
+        <div id="nm_prompts_list"></div>
+        <button class="btn2 btn-sm" onclick="addPromptField()" style="margin-top:6px;width:100%;">+ Add prompt</button>
+      </div>
+      <button class="btn" onclick="saveNewMatch()" style="margin-top:8px;">Save Match</button>
     </div>
   </div>
   <div class="card" style="background:rgba(200,169,110,.04);border-color:rgba(200,169,110,.2);">
@@ -422,10 +450,26 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
       <h2 style="font-size:18px;font-weight:500;">The Dossier</h2>
       <button onclick="toggleDossier()" style="background:transparent;border:none;color:var(--t2);cursor:pointer;font-size:18px;">✕</button>
     </div>
-    <div class="ctag">Identity Injection</div>
-    <div class="row"><label>Your Name</label><input type="text" id="dos_name"></div>
-    <div class="row"><label>Your Job</label><input type="text" id="dos_job"></div>
-    <div class="row"><label>Your Vibe / Hobbies</label><textarea id="dos_hobbies" rows="2"></textarea></div>
+    <div class="ctag">Your Profile</div>
+    <div class="r2">
+      <div class="row"><label>Your Name</label><input type="text" id="dos_name" placeholder="e.g. Alex"></div>
+      <div class="row"><label>Age</label><input type="text" id="dos_age" placeholder="e.g. 29"></div>
+    </div>
+    <div class="r2">
+      <div class="row"><label>Height</label><input type="text" id="dos_height" placeholder="e.g. 182 cm"></div>
+      <div class="row"><label>Star Sign</label><input type="text" id="dos_sign" placeholder="e.g. Scorpio"></div>
+    </div>
+    <div class="r2">
+      <div class="row"><label>Job / Industry</label><input type="text" id="dos_job" placeholder="e.g. Software Engineer"></div>
+      <div class="row"><label>Education</label><select id="dos_edu"><option value="">—</option><option>High school</option><option>Some college</option><option>Bachelor's degree</option><option>Graduate degree</option><option>PhD</option></select></div>
+    </div>
+    <div class="r2">
+      <div class="row"><label>Drinking</label><select id="dos_drink"><option value="">—</option><option>Never</option><option>Rarely</option><option>Socially</option><option>Often</option></select></div>
+      <div class="row"><label>Smoking</label><select id="dos_smoke"><option value="">—</option><option>Never</option><option>Rarely</option><option>Socially</option><option>Yes</option></select></div>
+    </div>
+    <div class="row"><label>City</label><input type="text" id="dos_city" placeholder="e.g. Vienna"></div>
+    <div class="row"><label>Hobbies / Vibe</label><textarea id="dos_hobbies" rows="2" placeholder="e.g. Hiking, climbing, cooking Italian food, reads a lot..."></textarea></div>
+    <div class="row"><label>About you <span class="op">(optional — for bio/opener context)</span></label><textarea id="dos_about" rows="2" placeholder="e.g. Austrian, work in tech, lived in London for 2 years..."></textarea></div>
     <div class="ctag" style="margin-top:24px;">Cloud Sync</div>
     <div class="r2">
       <div class="row"><label>GitHub PAT</label><input type="password" id="dos_pat" placeholder="github_pat_xxxxxxxx..."></div>
@@ -548,12 +592,21 @@ function bootApp() {
 }
 
 function populateDossierFields() {
-  document.getElementById('dos_name').value = bondState.dossier.name || '';
-  document.getElementById('dos_job').value = bondState.dossier.job || '';
-  document.getElementById('dos_hobbies').value = bondState.dossier.hobbies || '';
+  const d = bondState.dossier;
+  document.getElementById('dos_name').value = d.name || '';
+  document.getElementById('dos_age').value = d.age || '';
+  document.getElementById('dos_height').value = d.height || '';
+  document.getElementById('dos_sign').value = d.sign || '';
+  document.getElementById('dos_job').value = d.job || '';
+  document.getElementById('dos_edu').value = d.edu || '';
+  document.getElementById('dos_drink').value = d.drink || '';
+  document.getElementById('dos_smoke').value = d.smoke || '';
+  document.getElementById('dos_city').value = d.city || '';
+  document.getElementById('dos_hobbies').value = d.hobbies || '';
+  document.getElementById('dos_about').value = d.about || '';
   document.getElementById('dos_pat').value = activePAT || '';
-  document.getElementById('dos_repo').value = bondState.dossier.repo || '';
-  // Never pre-fill passphrase field — user re-enters if they want to change it
+  document.getElementById('dos_repo').value = d.repo || '';
+  // Never pre-fill passphrase field
 }
 
 function saveStateLocally() {
@@ -698,19 +751,162 @@ function showNewMatchUI(){document.getElementById('new-match-ui').style.display=
 function saveNewMatch() {
   let nm = document.getElementById('nm_name').value.trim();
   if(!nm){showN('Name required');return;}
-  bondState.matches.push({id:Date.now().toString(),name:nm,platform:document.getElementById('nm_plat').value,status:document.getElementById('nm_status').value,bio:document.getElementById('nm_bio').value.trim(),history:[]});
-  document.getElementById('nm_name').value='';document.getElementById('nm_bio').value='';
+  // Collect dynamic Q&A prompts
+  const prompts = [];
+  document.querySelectorAll('.nm-prompt-row').forEach(row => {
+    const q = row.querySelector('.nm-pq').value.trim();
+    const a = row.querySelector('.nm-pa').value.trim();
+    if(q || a) prompts.push({q, a});
+  });
+  bondState.matches.push({
+    id: Date.now().toString(),
+    name: nm,
+    platform: document.getElementById('nm_plat').value,
+    status: document.getElementById('nm_status').value,
+    height: document.getElementById('nm_height').value.trim(),
+    sign: document.getElementById('nm_sign').value.trim(),
+    edu: document.getElementById('nm_edu').value,
+    drink: document.getElementById('nm_drink').value,
+    smoke: document.getElementById('nm_smoke').value,
+    location: document.getElementById('nm_loc').value.trim(),
+    bio: document.getElementById('nm_bio').value.trim(),
+    prompts: prompts,
+    history: []
+  });
+  // Clear form
+  ['nm_name','nm_height','nm_sign','nm_loc','nm_bio','nm_scraper'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  ['nm_edu','nm_drink','nm_smoke'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('nm_prompts_list').innerHTML = '';
   document.getElementById('new-match-ui').style.display='none';
-  saveStateLocally();forceGistSync();
+  saveStateLocally(); forceGistSync();
+}
+
+function addPromptField(q, a) {
+  q = q || ''; a = a || '';
+  const list = document.getElementById('nm_prompts_list');
+  if(!list) return;
+  const row = document.createElement('div');
+  row.className = 'nm-prompt-row';
+  row.style.cssText = 'margin-bottom:10px;background:var(--bg3);border-radius:var(--r);padding:10px;border:.5px solid var(--bo);';
+  const inQ = document.createElement('input');
+  inQ.type = 'text'; inQ.className = 'nm-pq'; inQ.value = q;
+  inQ.placeholder = 'Prompt e.g. "The way to my heart is..."';
+  inQ.style.marginBottom = '6px';
+  const inA = document.createElement('input');
+  inA.type = 'text'; inA.className = 'nm-pa'; inA.value = a;
+  inA.placeholder = 'Her answer...';
+  const rmBtn = document.createElement('button');
+  rmBtn.textContent = '✕ remove';
+  rmBtn.style.cssText = 'background:transparent;border:none;color:var(--t3);font-size:11px;cursor:pointer;margin-top:4px;display:block;';
+  rmBtn.onclick = function(){ row.remove(); };
+  row.appendChild(inQ); row.appendChild(inA); row.appendChild(rmBtn);
+  list.appendChild(row);
+}
+
+function parseScraper() {
+  const raw = document.getElementById('nm_scraper').value;
+  if(!raw) { showN('Paste scraper output first'); return; }
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('==='));
+
+  let name='', ig='', height='', sign='', edu='', drink='', smoke='', location='', distance='', about='';
+  const prompts = [];
+  const eduOptions = ['high school','some college','bachelor','graduate degree','phd'];
+  const drinkOptions = ['never','rarely','socially','often'];
+  const smokeOptions = ['never','rarely','socially','yes'];
+  const signs = ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'];
+
+  // First line after header is usually name
+  let nameFound = false;
+  let aboutMode = false;
+  let currentPrompt = null;
+
+  for(let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    const ll = l.toLowerCase();
+
+    if(l.startsWith('Name:')) { name = l.replace('Name:', '').trim(); nameFound = true; continue; }
+    if(l.startsWith('IG:') || l.startsWith('Instagram:')) { ig = l.split(':').slice(1).join(':').trim(); about += (about?' ':'') + 'IG: @'+ig.replace('@',''); continue; }
+    if(l.startsWith('About ') && nameFound) { aboutMode = true; continue; }
+
+    if(ll.match(/^\d{3}\s*cm$/)) { height = l; continue; }
+    if(ll.includes('km away') || ll.includes('km from')) { distance = l; continue; }
+    if(ll === 'vienna' || (ll.match(/^[a-z\s]+,\s*[a-z]+$/) && !signs.includes(ll))) { location = l; continue; }
+    if(signs.includes(ll)) { sign = l; continue; }
+    if(eduOptions.some(e => ll.includes(e))) { edu = l; continue; }
+    if(drinkOptions.includes(ll)) { drink = l; continue; }
+    if(smokeOptions.includes(ll) && !drink) { smoke = l; continue; }
+    if(smokeOptions.includes(ll) && drink) { smoke = l; continue; }
+    // Gender lines — skip
+    if(['man','woman','non-binary','other'].includes(ll)) continue;
+    // Lines ending with "location" — skip
+    if(ll.endsWith("'s location") || ll === "location") continue;
+
+    // Prompt detection — lines with "..." or common prompt starters
+    const promptStarters = ["the way to my heart","i really enjoy","we'll get along if","i'm looking for","my most controversial","two truths","i go crazy for","i want someone","unusual skills","my simple pleasures","a life goal","i'm a regular","to me, dating","i promise i'm not","my biggest date fail","together we could","the key to my heart","a random fact","i'm weirdly attracted","let's make sure","never have i ever","i can be","my golden rule","a pro/con","message me if"];
+    const isPrompt = promptStarters.some(p => ll.startsWith(p)) || ll.includes('...');
+
+    if(isPrompt) {
+      currentPrompt = {q: l, a: ''};
+      prompts.push(currentPrompt);
+      continue;
+    }
+
+    // If we have a current prompt and this looks like its answer
+    if(currentPrompt && currentPrompt.a === '' && l.length > 0 && !isPrompt) {
+      currentPrompt.a = l;
+      currentPrompt = null;
+      continue;
+    }
+
+    // Otherwise it's about text
+    if(l.length > 10) { about += (about ? ' ' : '') + l; }
+  }
+
+  // Fill fields
+  if(name) document.getElementById('nm_name').value = name;
+  if(height) document.getElementById('nm_height').value = height;
+  if(sign) document.getElementById('nm_sign').value = sign;
+  if(location || distance) document.getElementById('nm_loc').value = [location, distance].filter(Boolean).join(' · ');
+  if(about) document.getElementById('nm_bio').value = about;
+
+  // Match selects
+  if(edu) {
+    const sel = document.getElementById('nm_edu');
+    for(let o of sel.options) { if(o.text.toLowerCase().includes(edu.toLowerCase())) { sel.value = o.value || o.text; break; } }
+  }
+  if(drink) {
+    const sel = document.getElementById('nm_drink');
+    for(let o of sel.options) { if(o.text.toLowerCase() === drink.toLowerCase()) { sel.value = o.value || o.text; break; } }
+  }
+  if(smoke) {
+    const sel = document.getElementById('nm_smoke');
+    for(let o of sel.options) { if(o.text.toLowerCase() === smoke.toLowerCase()) { sel.value = o.value || o.text; break; } }
+  }
+
+  // Fill prompts
+  document.getElementById('nm_prompts_list').innerHTML = '';
+  prompts.forEach(p => addPromptField(p.q, p.a));
+
+  showN('Profile parsed! Check fields & save.');
 }
 function renderMatches() {
   let el = document.getElementById('match-list');
+  if(!el) return;
   if(!bondState.matches.length){el.innerHTML='<div style="font-size:13px;color:var(--t3);">No active matches yet.</div>';return;}
   let h='';
   bondState.matches.forEach(m=>{
     let isAct=(currentActiveMatch&&currentActiveMatch.id===m.id)?'border-color:var(--ac);background:rgba(200,169,110,.05);':'';
+    const stats = [m.height, m.sign, m.edu, m.drink].filter(Boolean).join(' · ');
     h+=`<div class="sitem" style="${isAct}" onclick="loadMatch('${m.id}')">
-      <div style="flex:1;"><div class="sname">${m.name}</div><div class="ssub">${m.platform} · ${m.status}</div></div>
+      <div style="flex:1;">
+        <div class="sname">${m.name}</div>
+        <div class="ssub">${m.platform} · ${m.status}</div>
+        ${stats?'<div style="font-size:11px;color:var(--t3);margin-top:2px;">'+stats+'</div>':''}
+      </div>
       <button class="sdel-sm" onclick="archiveMatch(event,'${m.id}')">BURN</button>
     </div>`;
   });
@@ -718,17 +914,24 @@ function renderMatches() {
 }
 function loadMatch(id) {
   currentActiveMatch = bondState.matches.find(m=>m.id===id);
+  if(!currentActiveMatch) return;
   renderMatches();
   const banner = document.getElementById('match-banner');
   const bannerName = document.getElementById('match-banner-name');
-  if(banner&&bannerName){banner.style.display='flex';bannerName.textContent=currentActiveMatch.name+' · '+currentActiveMatch.platform;}
-  showN(`Target locked: ${currentActiveMatch.name}`);
+  if(banner) banner.style.display='flex';
+  if(bannerName) {
+    const stats = [currentActiveMatch.height, currentActiveMatch.sign].filter(Boolean).join(' · ');
+    bannerName.textContent = currentActiveMatch.name + (stats?' — '+stats:'') + ' · ' + currentActiveMatch.platform;
+  }
+  showN('Target locked: '+currentActiveMatch.name);
 }
 function clearActiveMatch() {
   currentActiveMatch = null;
   renderMatches();
   const banner = document.getElementById('match-banner');
   if(banner) banner.style.display='none';
+  const bannerName = document.getElementById('match-banner-name');
+  if(bannerName) bannerName.textContent='';
 }
 function archiveMatch(e, id) {
   e.stopPropagation();
@@ -749,16 +952,25 @@ function toggleDossier() {
   mod.className = mod.className.includes('on') ? 'modal-overlay' : 'modal-overlay on';
 }
 function saveDossier() {
-  bondState.dossier.name = document.getElementById('dos_name').value.trim();
-  bondState.dossier.job = document.getElementById('dos_job').value.trim();
-  bondState.dossier.hobbies = document.getElementById('dos_hobbies').value.trim();
+  const d = bondState.dossier;
+  d.name = document.getElementById('dos_name').value.trim();
+  d.age = document.getElementById('dos_age').value.trim();
+  d.height = document.getElementById('dos_height').value.trim();
+  d.sign = document.getElementById('dos_sign').value.trim();
+  d.job = document.getElementById('dos_job').value.trim();
+  d.edu = document.getElementById('dos_edu').value;
+  d.drink = document.getElementById('dos_drink').value;
+  d.smoke = document.getElementById('dos_smoke').value;
+  d.city = document.getElementById('dos_city').value.trim();
+  d.hobbies = document.getElementById('dos_hobbies').value.trim();
+  d.about = document.getElementById('dos_about').value.trim();
   const newPAT = document.getElementById('dos_pat').value.trim();
-  if(newPAT) { activePAT = newPAT; bondState.dossier.pat = newPAT; }
+  if(newPAT) { activePAT = newPAT; d.pat = newPAT; }
   const newPass = document.getElementById('dos_pass').value.trim();
-  if(newPass) { activePassphrase = newPass; showN('Passphrase updated. Pushing re-encrypted vault...'); }
-  bondState.dossier.repo = document.getElementById('dos_repo').value.trim();
+  if(newPass) { activePassphrase = newPass; }
+  d.repo = document.getElementById('dos_repo').value.trim();
   saveStateLocally(); forceGistSync(); toggleDossier();
-  if(!newPass) showN('Dossier saved & syncing...');
+  showN(newPass ? 'Passphrase updated & vault re-encrypted.' : 'Profile saved & syncing...');
 }
 
 // ==== LANGUAGE TOGGLE ====
@@ -807,8 +1019,23 @@ function getSys() {
   var deBase = dsVal==='b1'?'Write the German version at a natural B1/B2 level — sounds like a confident real person texting, not a textbook. Slightly imperfect is fine and actually more authentic. Do not over-correct.':dsVal==='austrian'?'Write the German version as polished natural Austrian German — not specifically Viennese dialect, but with a relaxed confident Austrian register. Sounds like a real Austrian person texting casually, not standard High German.':'The user will provide their own German draft in the MY VOICE field. Bond-ify that German draft keeping their B1/B2 level and voice but remove anything needy or low value.';
   var atRule = 'AUSTRIAN GERMAN RULES: Write like a real Austrian person texting, not a German textbook or translation. Use these naturally where they fit: jo (yeah), na (well/no), eh (obviously/anyway), halt (just/simply), passt (ok/fits), geh (come on), ned (not), ma (one/you informally). Short sentences. Contractions over full words. Never formal German constructions. Never translate English idioms literally — find the Austrian equivalent or rephrase entirely.';
   var lr = selLang==='en'?'Provide all message responses in English only — no German needed.':selLang==='de'?'Provide all message responses in German only — no English needed. '+deBase+' '+atRule:'Always provide both English AND German versions of every message. '+deBase+' '+atRule;
-  var dosText = '';
-  if(bondState.dossier.name) dosText = '\n\nUSER IDENTITY:\nName: '+bondState.dossier.name+(bondState.dossier.job?'\nJob: '+bondState.dossier.job:'')+(bondState.dossier.hobbies?'\nVibe: '+bondState.dossier.hobbies:'')+'\nUse this identity naturally when the prompt calls for it.';
+  const dos = bondState.dossier;
+  let dosText = '';
+  if(dos.name) {
+    const profileLines = [];
+    if(dos.name) profileLines.push('Name: '+dos.name);
+    if(dos.age) profileLines.push('Age: '+dos.age);
+    if(dos.height) profileLines.push('Height: '+dos.height);
+    if(dos.sign) profileLines.push('Star sign: '+dos.sign);
+    if(dos.job) profileLines.push('Job: '+dos.job);
+    if(dos.edu) profileLines.push('Education: '+dos.edu);
+    if(dos.drink) profileLines.push('Drinking: '+dos.drink);
+    if(dos.smoke) profileLines.push('Smoking: '+dos.smoke);
+    if(dos.city) profileLines.push('City: '+dos.city);
+    if(dos.hobbies) profileLines.push('Hobbies/vibe: '+dos.hobbies);
+    if(dos.about) profileLines.push('About: '+dos.about);
+    dosText = '\n\nUSER IDENTITY (use naturally where relevant):\n'+profileLines.join('\n');
+  }
   return 'You are Bond Suite — a dating communication coach inspired by Daniel Craig-era James Bond. Your job is to help craft messages that are confident, specific, and natural. Never robotic, never generic, never AI-sounding.\n\nWHAT WOULD DANIEL CRAIG BOND DO:\nBefore generating anything ask yourself this. Not Roger Moore — too theatrical. Not a pickup artist — too rehearsed. Craig Bond: says less than everyone expects, never chases, never explains himself, never needs the last word. Every message must pass this test: would Bond actually send this?\n\nCORE PRINCIPLES — back every suggestion with one of these:\n- Non-neediness: attraction drops when approval-seeking is visible. Messages should imply you have a life and options.\n- Mirror her energy: match her investment level exactly — never exceed it. If she sends 3 words send 3 words. If she sends short, be short. Jumping ahead emotionally creates pressure and signals over-investment.\n- Emotional regulation: calm grounded replies are more attractive than reactive ones.\n- Specificity: referencing what she actually said is the single biggest trust and connection builder. Generic replies feel like copy-paste.\n- Brevity signals confidence: short well-chosen words signal comfort with silence. Long messages signal insecurity.\n- Wit signals intelligence: light teasing done right is one of the strongest attraction signals.\n- Acknowledgement: feeling genuinely heard is a deep human need. Show you read what she wrote before you reply.\n\nLANGUAGE: '+lr+'\n\nTONE RULES:\n- Daniel Craig Bond era: emotionally contained, dry, confident, never theatrical\n- No em dashes, no ellipses, no AI phrases, no movie quotes, original lines only\n- 2-3 sentences maximum per message\n- Sound like a real person, not a writing assistant\n\nACKNOWLEDGE BEFORE GENERATING:\nAlways read what she wrote first. Note her tone, specific words she used, anything worth calling back, anything most men would skim but Bond would notice. State this before generating.\n\nQUESTION LOGIC — apply to every message:\nDecide: should this end with a question or not?\nAdd a question ONLY if: reply rate needs boosting / thread has gone flat / you need info to move forward.\nDo NOT add a question if: her engagement is already high / a statement lands stronger / you would look try-hard asking.\nState your reasoning briefly after each message.\n\nNO REPEAT RULE:\nNever suggest a question covering ground already in the conversation. Scan the context provided and confirm the topic has not come up.\n\nMIRROR CHECK:\nBefore suggesting any message check: is this matching her energy or exceeding it? If exceeding — pull back.\n\nMY VOICE:\nIf I provide what I want to say in my own words, use it as a starting point. Keep my intention and meaning but remove anything needy, over-eager, or low value. Bond-ify the delivery.\n\nPROTECT THE CONNECTION:\nPrimary goal is never to sound clever — it is to deepen connection with this specific person. Flag any medium or high risk to the connection.\n\nBACK EVERYTHING:\nEvery message suggestion must include a 1-sentence psychological note on why it works.'+dosText+'\n\n---\n\n'+getWABlock();
 }
 
@@ -966,8 +1193,24 @@ function buildForm(m, pre) {
     var pv = pre[fid] || '';
     // Auto-fill from active match
     if(currentActiveMatch) {
-      if(fid==='her_bio'&&!pv) pv = currentActiveMatch.bio;
       if(fid==='platform'&&!pv) pv = currentActiveMatch.platform;
+      if(fid==='her_bio'&&!pv) {
+        // Build rich profile string from structured match data
+        const m = currentActiveMatch;
+        const parts = [];
+        const stats = [m.height, m.sign, m.edu,
+          m.drink&&m.drink!=='—'?(m.drink==='Never'?'non-drinker':m.drink+' drinker'):null,
+          m.smoke&&m.smoke!=='—'?(m.smoke==='Never'?'non-smoker':m.smoke+' smoker'):null
+        ].filter(Boolean);
+        if(stats.length) parts.push(stats.join(', ')+'.');
+        if(m.location) parts.push('Location: '+m.location+'.');
+        if(m.bio) parts.push(m.bio);
+        if(m.prompts&&m.prompts.length) {
+          m.prompts.forEach(function(p){ if(p.q||p.a) parts.push('"'+p.q+'": '+p.a); });
+        }
+        pv = parts.join(' ');
+      }
+      if(fid==='her_name'&&!pv) pv = currentActiveMatch.name;
     }
     var cv = (fid==='her_msg'||fid==='conv') && extConv ? extConv : pv;
     var lbl = '<label>'+d.l+(d.opt?' <span class="op">(optional)</span>':'')+'</label>';
