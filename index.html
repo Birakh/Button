@@ -263,6 +263,12 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
 <!-- ===== PROMPTS PANE ===== -->
 <div class="mpane" id="mp-prompts">
 
+<!-- Pre-fill banner: shown when scraper bookmarklet opens Bond Suite with ?bio=&conv= URL params -->
+<div id="prefill-banner" style="display:none;background:rgba(62,207,142,.07);border:.5px solid rgba(62,207,142,.25);border-radius:var(--r);padding:10px 13px;margin-bottom:14px;align-items:center;justify-content:space-between;">
+  <div style="font-size:12px;color:var(--gr);font-family:'SF Mono',monospace;" id="prefill-banner-text"></div>
+  <button onclick="urlPreFill={bio:'',conv:''};this.parentElement.style.display='none';" style="background:transparent;border:none;color:var(--t3);cursor:pointer;font-size:12px;font-family:'SF Mono',monospace;">✕ clear</button>
+</div>
+
 <div id="match-banner" class="match-banner" style="display:none;">
   <div style="flex:1;">
     <div style="font-size:10px;color:var(--ac);font-family:'SF Mono',monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;">Target Locked</div>
@@ -777,6 +783,7 @@ let currentActiveMatch = null;
 let activePAT = '';        // GitHub token — RAM only
 let activePassphrase = ''; // Encryption key — RAM only, never stored anywhere
 var selMode='', selLang='both', extConv='', qMode='';
+var urlPreFill = {bio:'', conv:''}; // populated from ?bio=&conv= URL params by scraper bookmarklet
 var saves=[];
 try{saves=JSON.parse(localStorage.getItem('bsaves')||'[]');}catch(e){}
 
@@ -850,6 +857,28 @@ function bootApp() {
   buildCL();
   // Log what was loaded for debugging
   console.log('[BondSuite] Booted. Matches:', bondState.matches.length, '| Name:', bondState.dossier.name, '| Repo:', bondState.dossier.repo);
+  readURLParams();
+}
+
+// Reads ?bio=...&conv=... URL params — set by the Bumble scraper bookmarklet
+// Works alongside Smart Paste — URL params auto-fill fields when Bond Suite opens in a new tab
+function readURLParams() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const bio = params.get('bio');
+    const conv = params.get('conv');
+    if(!bio && !conv) return;
+    if(bio) urlPreFill.bio = decodeURIComponent(bio);
+    if(conv) urlPreFill.conv = decodeURIComponent(conv);
+    const pb = document.getElementById('prefill-banner');
+    const pt = document.getElementById('prefill-banner-text');
+    if(pb && pt) {
+      pt.textContent = 'Scraper data loaded — ' + [bio?'profile':'', conv?'conversation':''].filter(Boolean).join(' + ') + ' pre-filled. Pick a mode below.';
+      pb.style.display = 'flex';
+    }
+    const btn = document.querySelectorAll('.tnav-btn')[1];
+    if(btn) swMain('prompts', btn);
+  } catch(e) {}
 }
 
 function populateDossierFields() {
@@ -1506,6 +1535,9 @@ function buildForm(m, pre) {
         if(convParts.length) cv = convParts.join('\n\n');
       }
     }
+    // URL param pre-fill from scraper bookmarklet (fallback if no match loaded and no saved value)
+    if(fid==='her_bio' && !pv && urlPreFill.bio) pv = urlPreFill.bio;
+    if((fid==='conv'||fid==='fdp_conv') && !pv && urlPreFill.conv) pv = urlPreFill.conv;
     var cv = (fid==='her_msg'||fid==='conv') && extConv ? extConv : pv;
     var lbl = '<label>'+d.l+(d.opt?' <span class="op">(optional)</span>':'')+'</label>';
     if(d.t==='ta'){w.innerHTML=lbl+'<textarea id="f_'+fid+'" rows="'+(d.rows||3)+'" placeholder="'+(d.p||'')+'">'+eH(cv)+'</textarea>';}
