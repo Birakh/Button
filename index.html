@@ -487,11 +487,11 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
       </div>
       <div class="row">
         <label>Bumble / Tinder / Hinge chat</label>
-        <textarea id="dp-conv-app" rows="5" placeholder="Paste the full app conversation here..."></textarea>
+        <textarea id="dp-conv-app" rows="5" placeholder="Paste the full app conversation here..." oninput="dpSaveConv()"></textarea>
       </div>
       <div class="row" style="margin-top:4px;">
         <label>WhatsApp <span class="op">(if you moved there)</span></label>
-        <textarea id="dp-conv-wa" rows="5" placeholder="Paste WhatsApp conversation here (optional — paste as exported .txt or manually)..."></textarea>
+        <textarea id="dp-conv-wa" rows="5" placeholder="Paste WhatsApp conversation here (optional — paste as exported .txt or manually)..." oninput="dpSaveConv()"></textarea>
       </div>
     </div>
 
@@ -1017,6 +1017,8 @@ function saveNewMatch() {
     name: nm,
     platform: document.getElementById('nm_plat').value,
     status: document.getElementById('nm_status').value,
+    convApp: window._lastPastedConv || '',
+    convWA: '',
     height: document.getElementById('nm_height').value.trim(),
     sign: document.getElementById('nm_sign').value.trim(),
     edu: document.getElementById('nm_edu').value,
@@ -1036,6 +1038,7 @@ function saveNewMatch() {
   });
   document.getElementById('nm_prompts_list').innerHTML = '';
   document.getElementById('new-match-ui').style.display='none';
+  window._lastPastedConv = ''; // consumed — clear it
   saveStateLocally(); forceGistSync();
 }
 
@@ -1890,11 +1893,11 @@ async function smartPaste() {
     showNewMatchUI();
     document.getElementById('nm_scraper').value = text;
     parseScraper();
-    // Also stash conversation for Date Prep
+    // Also stash conversation — will be saved to match on saveNewMatch()
     if(hasConv) {
       const convPart = text.split('=== CONVERSATION ===')[1]||'';
       window._lastPastedConv = convPart.trim();
-      msgEl.textContent = '✓ Profile + conversation parsed. Check fields & save. Conversation ready for Date Prep.';
+      msgEl.textContent = '✓ Profile + conversation parsed. Check fields & save — conversation will be stored with the match.';
     }
   } else if(hasConv || text.match(/^(Her|Me):/m) || text.match(/^\[?\d{1,2}:\d{2}/m)) {
     // Looks like a conversation only — route to Date Prep
@@ -1915,15 +1918,33 @@ async function smartPaste() {
   }
 }
 
-// Auto-fill conversation into Date Prep when a match is selected
-function dpCheckPendingConv() {
-  if(window._lastPastedConv && dpActiveMatch) {
-    const f = document.getElementById('dp-conv-app');
-    if(f && !f.value) {
-      f.value = window._lastPastedConv;
-      showN('Conversation auto-filled from last paste.');
-    }
+// Auto-fill conversation from saved match data
+function dpPreFillConv() {
+  if(!dpActiveMatch) return;
+  const appField = document.getElementById('dp-conv-app');
+  const waField = document.getElementById('dp-conv-wa');
+  if(appField && !appField.value && dpActiveMatch.convApp) {
+    appField.value = dpActiveMatch.convApp;
   }
+  if(waField && !waField.value && dpActiveMatch.convWA) {
+    waField.value = dpActiveMatch.convWA;
+  }
+}
+
+// Save conversation back to match object and push to repo
+function dpSaveConv() {
+  if(!dpActiveMatch) return;
+  const appField = document.getElementById('dp-conv-app');
+  const waField = document.getElementById('dp-conv-wa');
+  if(appField) dpActiveMatch.convApp = appField.value;
+  if(waField) dpActiveMatch.convWA = waField.value;
+  // Debounce — save 2s after user stops typing
+  clearTimeout(window._convSaveTimer);
+  window._convSaveTimer = setTimeout(()=>{
+    saveStateLocally();
+    forceGistSync();
+    showN('Conversation saved to vault.');
+  }, 2000);
 }
 
 async function dpSmartPasteConv() {
@@ -1945,6 +1966,7 @@ async function dpSmartPasteConv() {
     appField.value = text.trim();
     showN('Conversation pasted.');
   }
+  dpSaveConv();
 }
 
 // ==== EDIT MATCH ====
@@ -2057,12 +2079,15 @@ function dpLoadMatch(id) {
     m.location
   ].filter(Boolean).join(' · ');
   info.style.display = 'block';
+  const convStatus = (m.convApp?'<span style="color:var(--gr);">✓ App conv</span>':'<span style="color:var(--t3);">No app conv</span>')
+    + ' · ' + (m.convWA?'<span style="color:var(--gr);">✓ WhatsApp</span>':'<span style="color:var(--t3);">No WhatsApp</span>');
   info.innerHTML = '<strong style="color:var(--ac);">'+m.name+'</strong> · '+m.platform+' · '+m.status
     + (stats?'<br>'+stats:'')
-    + (m.bio?'<br><span style="color:var(--t);">'+m.bio.slice(0,120)+(m.bio.length>120?'...':'')+'</span>':'');
+    + (m.bio?'<br><span style="color:var(--t);">'+m.bio.slice(0,120)+(m.bio.length>120?'...':'')+'</span>':'')
+    + '<br>'+convStatus;
   // Render date history
   dpRenderHistory();
-  dpCheckPendingConv();
+  dpPreFillConv();
   // Set default log number to next date
   const nextNum = (m.dates||[]).length + 1;
   const numSel = document.getElementById('dp-log-num');
