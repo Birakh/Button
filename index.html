@@ -237,6 +237,14 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
       </div>
       <!-- About -->
       <div class="row"><label>About her</label><textarea id="nm_bio" rows="3" placeholder="Her bio text..."></textarea></div>
+      <div class="row">
+        <label>App conversation <span class="op">(Bumble/Tinder — auto-filled from Smart Paste)</span></label>
+        <textarea id="nm_conv_app" rows="3" placeholder="Paste app conversation here — or leave blank if Smart Paste filled it..."></textarea>
+      </div>
+      <div class="row">
+        <label>WhatsApp conversation <span class="op">(with timestamps — optional)</span></label>
+        <textarea id="nm_conv_wa" rows="3" placeholder="Paste WhatsApp export here — timestamps and names preserved..."></textarea>
+      </div>
       <!-- Dynamic Q&A prompts -->
       <div class="row">
         <label>Profile prompts <span class="op">(e.g. The way to my heart is...)</span></label>
@@ -256,11 +264,15 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
 <div class="mpane" id="mp-prompts">
 
 <div id="match-banner" class="match-banner" style="display:none;">
-  <div>
+  <div style="flex:1;">
     <div style="font-size:10px;color:var(--ac);font-family:'SF Mono',monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;">Target Locked</div>
     <div id="match-banner-name" style="font-size:14px;font-weight:500;color:var(--t);"></div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;font-family:-apple-system,sans-serif;font-size:12px;color:var(--t2);">
+      <input type="checkbox" id="match-inject-toggle" checked style="width:16px;height:16px;min-height:0;accent-color:var(--ac);cursor:pointer;">
+      Inject her profile + conversations into prompts
+    </label>
   </div>
-  <button onclick="clearActiveMatch()" style="background:transparent;border:none;color:var(--t3);cursor:pointer;font-size:12px;font-family:'SF Mono',monospace;">✕ clear</button>
+  <button onclick="clearActiveMatch()" style="background:transparent;border:none;color:var(--t3);cursor:pointer;font-size:12px;font-family:'SF Mono',monospace;align-self:flex-start;">✕ clear</button>
 </div>
 
 <div class="card">
@@ -1017,8 +1029,8 @@ function saveNewMatch() {
     name: nm,
     platform: document.getElementById('nm_plat').value,
     status: document.getElementById('nm_status').value,
-    convApp: window._lastPastedConv || '',
-    convWA: '',
+    convApp: (document.getElementById('nm_conv_app')&&document.getElementById('nm_conv_app').value.trim()) || window._lastPastedConv || '',
+    convWA: (document.getElementById('nm_conv_wa')&&document.getElementById('nm_conv_wa').value.trim()) || window._lastPastedConvWA || '',
     height: document.getElementById('nm_height').value.trim(),
     sign: document.getElementById('nm_sign').value.trim(),
     edu: document.getElementById('nm_edu').value,
@@ -1030,7 +1042,7 @@ function saveNewMatch() {
     history: []
   });
   // Clear form
-  ['nm_name','nm_height','nm_sign','nm_loc','nm_bio','nm_scraper'].forEach(id => {
+  ['nm_name','nm_height','nm_sign','nm_loc','nm_bio','nm_scraper','nm_conv_app','nm_conv_wa'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value='';
   });
   ['nm_edu','nm_drink','nm_smoke'].forEach(id => {
@@ -1038,7 +1050,7 @@ function saveNewMatch() {
   });
   document.getElementById('nm_prompts_list').innerHTML = '';
   document.getElementById('new-match-ui').style.display='none';
-  window._lastPastedConv = ''; // consumed — clear it
+  window._lastPastedConv = ''; window._lastPastedConvWA = ''; // consumed — clear
   saveStateLocally(); forceGistSync();
 }
 
@@ -1148,6 +1160,15 @@ function parseScraper() {
   document.getElementById('nm_prompts_list').innerHTML = '';
   prompts.forEach(p => addPromptField(p.q, p.a));
 
+  // Pre-fill conv textareas if we have stashed conv data
+  if(window._lastPastedConv) {
+    const ca = document.getElementById('nm_conv_app');
+    if(ca) ca.value = window._lastPastedConv;
+  }
+  if(window._lastPastedConvWA) {
+    const cw = document.getElementById('nm_conv_wa');
+    if(cw) cw.value = window._lastPastedConvWA;
+  }
   showN('Profile parsed! Check fields & save.');
 }
 function renderMatches() {
@@ -1455,8 +1476,10 @@ function buildForm(m, pre) {
     var d = FLD[fid]; if(!d) return;
     var w = document.createElement('div'); w.className = 'row';
     var pv = pre[fid] || '';
-    // Auto-fill from active match
-    if(currentActiveMatch) {
+    // Auto-fill from active match (respects inject toggle)
+    const injectToggle = document.getElementById('match-inject-toggle');
+    const shouldInject = currentActiveMatch && (!injectToggle || injectToggle.checked);
+    if(shouldInject) {
       if(fid==='platform'&&!pv) pv = currentActiveMatch.platform;
       if(fid==='her_bio'&&!pv) {
         // Build rich profile string from structured match data
@@ -1475,6 +1498,13 @@ function buildForm(m, pre) {
         pv = parts.join(' ');
       }
       if(fid==='her_name'&&!pv) pv = currentActiveMatch.name;
+      // Auto-fill conversation fields from stored match data
+      if((fid==='conv'||fid==='fdp_conv')&&!cv&&!extConv) {
+        const convParts = [];
+        if(currentActiveMatch.convApp) convParts.push('--- App conversation ---\n'+currentActiveMatch.convApp);
+        if(currentActiveMatch.convWA) convParts.push('--- WhatsApp ---\n'+currentActiveMatch.convWA);
+        if(convParts.length) cv = convParts.join('\n\n');
+      }
     }
     var cv = (fid==='her_msg'||fid==='conv') && extConv ? extConv : pv;
     var lbl = '<label>'+d.l+(d.opt?' <span class="op">(optional)</span>':'')+'</label>';
@@ -1883,38 +1913,47 @@ async function smartPaste() {
     return;
   }
 
-  const hasProfile = text.includes('=== BUMBLE PROFILE ===');
-  const hasConv = text.includes('=== CONVERSATION ===');
+  // Robust detection — normalise whitespace issues
+  const normText = text.replace(/\s+/g,' ');
+  const hasProfile = text.includes('BUMBLE PROFILE') || text.includes('Name:');
+  const hasConv = text.includes('CONVERSATION') || text.match(/^(Her|Me):/m);
 
   if(hasProfile) {
-    // Full scraper output — parse into new match form
+    // Always → Add Match form. Never route to Date Prep when a profile is present.
     msgEl.style.color = 'var(--gr)';
     msgEl.textContent = '✓ Profile detected. Parsing...';
     showNewMatchUI();
+    // Scroll to the new match UI
+    setTimeout(()=>{ const el=document.getElementById('new-match-ui'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }, 100);
     document.getElementById('nm_scraper').value = text;
     parseScraper();
-    // Also stash conversation — will be saved to match on saveNewMatch()
-    if(hasConv) {
-      const convPart = text.split('=== CONVERSATION ===')[1]||'';
+    // Stash conversation separately
+    if(hasConv && text.includes('CONVERSATION')) {
+      const convPart = text.split(/={3}\s*CONVERSATION\s*={3}/)[1]||'';
       window._lastPastedConv = convPart.trim();
-      msgEl.textContent = '✓ Profile + conversation parsed. Check fields & save — conversation will be stored with the match.';
+      // Also pre-fill the WA conv field if it looks like WhatsApp format
+      const isWA = convPart.match(/\d{1,2}\/\d{1,2}\/\d{2,4}/);
+      if(isWA) {
+        window._lastPastedConvWA = convPart.trim();
+        window._lastPastedConv = '';
+      }
+      msgEl.textContent = '✓ Profile parsed + conversation stored. Check fields below & save.';
+    } else {
+      msgEl.textContent = '✓ Profile parsed. Check fields below & save.';
     }
-  } else if(hasConv || text.match(/^(Her|Me):/m) || text.match(/^\[?\d{1,2}:\d{2}/m)) {
-    // Looks like a conversation only — route to Date Prep
+  } else if(hasConv) {
+    // Conversation only — ask user which match to attach it to, then route to Date Prep
     msgEl.style.color = 'var(--yl)';
-    msgEl.textContent = '⚠ Conversation detected (no profile). Routing to Date Prep...';
     window._lastPastedConv = text.trim();
+    const isWA = text.match(/\d{1,2}\/\d{1,2}\/\d{2,4},?\s*\d{1,2}:\d{2}/);
+    if(isWA) { window._lastPastedConvWA = text.trim(); window._lastPastedConv = ''; }
+    msgEl.textContent = '⚠ Conversation only (no profile). Select a match in Date Prep to attach it.';
     setTimeout(()=>{
       swMain('dateprep', document.querySelector('.tnav-btn:nth-child(3)'));
-      // Try to fill whichever conv field is visible
-      const f = document.getElementById('dp-conv-app') || document.getElementById('dp2-conv');
-      if(f) { f.value = text.trim(); showN('Conversation pasted into Date Prep.'); }
-      msgEl.textContent = '✓ Conversation loaded into Date Prep.';
-      msgEl.style.color = 'var(--gr)';
     }, 300);
   } else {
     msgEl.style.color = 'var(--rd)';
-    msgEl.textContent = '✗ Format not recognised. Expected Bumble scraper output. Try running the bookmarklet again.';
+    msgEl.textContent = '✗ Format not recognised. Run the bookmarklet on Bumble first, then tap Smart Paste.';
   }
 }
 
