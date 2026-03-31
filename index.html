@@ -1010,30 +1010,40 @@ async function pullFromGist(btnEl, silent=false) {
 }
 
 async function testGitHubPAT() {
-  const pat = (document.getElementById('dos_pat') ? document.getElementById('dos_pat').value.trim() : '') || bondState.dossier.pat;
+  const pat = (document.getElementById('dos_pat') ? document.getElementById('dos_pat').value.trim() : '') || bondState.dossier.pat || activePAT;
   const repo = (document.getElementById('dos_repo') ? document.getElementById('dos_repo').value.trim() : '') || bondState.dossier.repo;
-  const resultEl = document.getElementById('pat-test-result');
+  const resultEl = document.getElementById('pat-test-result'); // only exists in dossier modal
   const btn = document.getElementById('pat-test-btn') || document.getElementById('test-btn');
-  if(!pat){resultEl.style.color='var(--rd)';resultEl.textContent='✗ Enter a PAT first.';return;}
-  btn.textContent='Testing...';btn.disabled=true;resultEl.textContent='';
+
+  function setResult(color, msg) {
+    if(resultEl) { resultEl.style.color=color; resultEl.textContent=msg; }
+    showN(msg); // always show toast so Matches tab button gives feedback
+  }
+
+  if(!pat){ setResult('var(--rd)', '✗ No PAT — open ⚙️ and save your PAT first.'); return; }
+  if(btn){ btn.textContent='Testing...'; btn.disabled=true; }
+  if(resultEl) resultEl.textContent='';
   try {
     const headers = {'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json'};
     const res = await fetch('https://api.github.com/user', {headers});
-    if(!res.ok){resultEl.style.color='var(--rd)';resultEl.textContent=res.status===401?'✗ Invalid token.':` ✗ Error ${res.status}.`;btn.textContent='Test Connection';btn.disabled=false;return;}
+    if(!res.ok){
+      setResult('var(--rd)', res.status===401?'✗ Invalid PAT.':'✗ Error '+res.status+'.');
+      if(btn){btn.textContent='Test';btn.disabled=false;} return;
+    }
     const user = await res.json();
     if(repo) {
       const repoRes = await fetch(`https://api.github.com/repos/${repo}`, {headers});
-      if(repoRes.ok){resultEl.style.color='var(--gr)';resultEl.textContent=`✓ @${user.login} · repo "${repo}" accessible. Ready to sync.`;}
-      else if(repoRes.status===404){resultEl.style.color='var(--rd)';resultEl.textContent=`✗ Repo "${repo}" not found or no access.`;}
-      else{resultEl.style.color='var(--yl)';resultEl.textContent=`⚠ @${user.login} authenticated but repo check failed.`;}
+      if(repoRes.ok) setResult('var(--gr)', '✓ @'+user.login+' · repo "'+repo+'" accessible.');
+      else if(repoRes.status===404) setResult('var(--rd)', '✗ Repo "'+repo+'" not found or no access.');
+      else setResult('var(--yl)', '⚠ @'+user.login+' authenticated but repo check failed.');
     } else {
       const scopes = res.headers.get('x-oauth-scopes')||'';
       const hasScope = scopes.includes('gist')||scopes.includes('repo');
-      if(hasScope){resultEl.style.color='var(--gr)';resultEl.textContent=`✓ Connected as @${user.login} — gist scope confirmed.`;}
-      else{resultEl.style.color='var(--yl)';resultEl.textContent=`⚠ Authenticated as @${user.login} but missing gist/repo scope.`;}
+      if(hasScope) setResult('var(--gr)', '✓ @'+user.login+' — gist scope confirmed.');
+      else setResult('var(--yl)', '⚠ @'+user.login+' — missing gist/repo scope.');
     }
-  } catch(e){resultEl.style.color='var(--rd)';resultEl.textContent='✗ Network error.';}
-  btn.textContent='Test Connection';btn.disabled=false;
+  } catch(e){ setResult('var(--rd)', '✗ Network error.'); }
+  if(btn){ btn.textContent='Test'; btn.disabled=false; }
 }
 
 // ==== STEALTH MODE ====
