@@ -209,6 +209,10 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
       <button class="btn2 btn-sm" onclick="forceGistSync(this)" id="sync-btn" style="flex:1.5;">↑ Push</button>
     </div>
     <div id="new-match-ui" style="display:none;margin-top:12px;border-top:1px solid var(--bo);padding-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:12px;color:var(--ac);font-family:'SF Mono',monospace;letter-spacing:.06em;text-transform:uppercase;">New Match</span>
+        <button onclick="clearNewMatchUI()" style="background:transparent;border:none;color:var(--t3);cursor:pointer;font-size:12px;font-family:'SF Mono',monospace;">✕ clear &amp; close</button>
+      </div>
       <!-- Scraper paste & parse -->
       <div class="row">
         <label>Paste scraper output <span class="op">(auto-fills fields below)</span></label>
@@ -1064,6 +1068,17 @@ function initStealthMode() {
 
 // ==== MATCH MANAGEMENT ====
 function showNewMatchUI(){document.getElementById('new-match-ui').style.display='block';}
+function clearNewMatchUI(){
+  ['nm_name','nm_height','nm_sign','nm_loc','nm_bio','nm_scraper','nm_conv_app','nm_conv_wa'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  ['nm_edu','nm_drink','nm_smoke'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const list=document.getElementById('nm_prompts_list'); if(list) list.innerHTML='';
+  window._lastPastedConv=''; window._lastPastedConvWA='';
+  document.getElementById('new-match-ui').style.display='none';
+}
 function saveNewMatch() {
   let nm = document.getElementById('nm_name').value.trim();
   if(!nm){showN('Name required');return;}
@@ -1127,8 +1142,9 @@ function addPromptField(q, a) {
 }
 
 function parseScraper() {
-  const raw = document.getElementById('nm_scraper').value;
+  let raw = document.getElementById('nm_scraper').value;
   if(!raw) { showN('Paste scraper output first'); return; }
+  raw = raw.split(/={3}\s*CONVERSATION\s*={3}/)[0];
   const lines = raw.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('==='));
 
   let name='', ig='', height='', sign='', edu='', drink='', smoke='', location='', distance='', about='';
