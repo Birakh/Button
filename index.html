@@ -1997,7 +1997,8 @@ async function smartPaste() {
     showNewMatchUI();
     // Scroll to the new match UI
     setTimeout(()=>{ const el=document.getElementById('new-match-ui'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }, 100);
-    document.getElementById('nm_scraper').value = text;
+    const profilePart = text.split(/={3}\s*CONVERSATION\s*={3}/)[0] || text;
+    document.getElementById('nm_scraper').value = profilePart;
     parseScraper();
     // Stash conversation separately
     if(hasConv && text.includes('CONVERSATION')) {
