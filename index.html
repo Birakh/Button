@@ -263,6 +263,17 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
 <!-- ===== PROMPTS PANE ===== -->
 <div class="mpane" id="mp-prompts">
 
+<!-- Who is this for -->
+<div class="card" style="padding:12px 16px;margin-bottom:10px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <label style="margin:0;font-size:12px;white-space:nowrap;color:var(--t2);font-family:'SF Mono',monospace;letter-spacing:.04em;text-transform:uppercase;">Who is this for</label>
+    <select id="prompts-match-select" onchange="promptsLoadMatch(this.value)" style="flex:1;min-height:38px;font-size:14px;">
+      <option value="">— anyone / no target —</option>
+    </select>
+    <button onclick="promptsLoadMatch('');document.getElementById('prompts-match-select').value='';" style="background:transparent;border:none;color:var(--t3);cursor:pointer;font-size:18px;padding:4px;min-height:0;flex-shrink:0;" title="Clear">✕</button>
+  </div>
+</div>
+
 <!-- Pre-fill banner: shown when scraper bookmarklet opens Bond Suite with ?bio=&conv= URL params -->
 <div id="prefill-banner" style="display:none;background:rgba(62,207,142,.07);border:.5px solid rgba(62,207,142,.25);border-radius:var(--r);padding:10px 13px;margin-bottom:14px;align-items:center;justify-content:space-between;">
   <div style="font-size:12px;color:var(--gr);font-family:'SF Mono',monospace;" id="prefill-banner-text"></div>
@@ -1228,20 +1239,49 @@ function loadMatch(id) {
   currentActiveMatch = bondState.matches.find(m=>m.id===id);
   if(!currentActiveMatch) return;
   renderMatches();
+  // Sync the prompts dropdown
+  const psel = document.getElementById('prompts-match-select');
+  if(psel) psel.value = id;
+  _showMatchBanner();
+  showN('Target locked: '+currentActiveMatch.name);
+}
+
+function promptsLoadMatch(id) {
+  if(!id) {
+    // Clear — but keep it soft, don't burn anything
+    currentActiveMatch = null;
+    _hideMatchBanner();
+    renderMatches();
+    return;
+  }
+  currentActiveMatch = bondState.matches.find(m=>m.id===id) || null;
+  if(!currentActiveMatch) return;
+  renderMatches();
+  _showMatchBanner();
+}
+
+function _showMatchBanner() {
   const banner = document.getElementById('match-banner');
   const bannerName = document.getElementById('match-banner-name');
   if(banner) banner.style.display='flex';
-  if(bannerName) {
+  if(bannerName && currentActiveMatch) {
     const stats = [currentActiveMatch.height, currentActiveMatch.sign].filter(Boolean).join(' · ');
     bannerName.textContent = currentActiveMatch.name + (stats?' — '+stats:'') + ' · ' + currentActiveMatch.platform;
   }
-  showN('Target locked: '+currentActiveMatch.name);
+}
+
+function _hideMatchBanner() {
+  const banner = document.getElementById('match-banner');
+  if(banner) banner.style.display='none';
+  const bannerName = document.getElementById('match-banner-name');
+  if(bannerName) bannerName.textContent='';
 }
 function clearActiveMatch() {
   currentActiveMatch = null;
   renderMatches();
-  const banner = document.getElementById('match-banner');
-  if(banner) banner.style.display='none';
+  _hideMatchBanner();
+  const psel = document.getElementById('prompts-match-select');
+  if(psel) psel.value = '';
   const bannerName = document.getElementById('match-banner-name');
   if(bannerName) bannerName.textContent='';
 }
@@ -2123,17 +2163,25 @@ function closeEditMatch() {
 let dpActiveMatch = null;
 
 function dpPopulateDropdown() {
-  const sel = document.getElementById('dp-match-select');
-  if(!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">— choose a match —</option>';
-  bondState.matches.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.id;
-    const dateCount = (m.dates||[]).length;
-    opt.textContent = m.name + (dateCount ? ' ('+dateCount+' date'+(dateCount>1?'s':'')+')' : '');
-    if(m.id === cur) opt.selected = true;
-    sel.appendChild(opt);
+  const dropdowns = [
+    {id:'dp-match-select', blank:'— choose a match —'},
+    {id:'prompts-match-select', blank:'— anyone / no target —'},
+  ];
+  dropdowns.forEach(function(d) {
+    const sel = document.getElementById(d.id);
+    if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">'+d.blank+'</option>';
+    bondState.matches.forEach(function(m) {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      const dateCount = (m.dates||[]).length;
+      opt.textContent = m.name + (dateCount ? ' ('+dateCount+' date'+(dateCount>1?'s':'')+')' : '');
+      if(m.id === cur) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    // Re-sync selected value to active match if any
+    if(d.id === 'prompts-match-select' && currentActiveMatch) sel.value = currentActiveMatch.id;
   });
 }
 
