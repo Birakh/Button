@@ -1148,68 +1148,92 @@ function parseScraper() {
   raw = raw.split(/={3}\s*CONVERSATION\s*={3}/)[0];
   const lines = raw.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('==='));
 
-  let name='', ig='', height='', sign='', edu='', drink='', smoke='', location='', distance='', about='';
+  let name='', age='', job='', uni='', height='', sign='', edu='', drink='', smoke='',
+      politics='', religion='', kids='', lookingFor='', location='', distance='', about='';
   const prompts = [];
-  const eduOptions = ['high school','some college','bachelor','graduate degree','phd'];
+  const spotify = [];
+  const eduOptions = ['high school','some college','bachelor','graduate degree','phd','in college','in grad school'];
   const drinkOptions = ['never','rarely','socially','often'];
   const smokeOptions = ['never','rarely','socially','yes'];
   const signs = ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'];
+  const politicsOpts = ['left','right','moderate','apolitical','other'];
+  const religionOpts = ['christian','catholic','muslim','jewish','hindu','buddhist','sikh','spiritual','agnostic','atheist','other'];
+  const kidsOpts = ['want someday','open to kids','dont want kids','not sure yet','have kids'];
+  const lookingForOpts = ['relationship','casual','marriage','not sure','friendship','something new'];
 
-  // First line after header is usually name
   let nameFound = false;
-  let aboutMode = false;
   let currentPrompt = null;
+  let inSpotify = false;
 
   for(let i = 0; i < lines.length; i++) {
     const l = lines[i];
-    const ll = l.toLowerCase();
+    const ll = l.toLowerCase().trim();
+    if(!ll || ll.length < 2) continue;
 
-    if(l.startsWith('Name:')) { name = l.replace('Name:', '').trim(); nameFound = true; continue; }
-    if(l.startsWith('IG:') || l.startsWith('Instagram:')) { ig = l.split(':').slice(1).join(':').trim(); about += (about?' ':'') + 'IG: @'+ig.replace('@',''); continue; }
-    if(l.startsWith('About ') && nameFound) { aboutMode = true; continue; }
+    if(l.startsWith('Name:')) {
+      const raw2 = l.replace('Name:','').trim();
+      const ageMt = raw2.match(/,?\s*(\d{2})\s*$/);
+      if(ageMt) { age = ageMt[1]; name = raw2.replace(ageMt[0],'').trim(); }
+      else name = raw2;
+      nameFound = true; continue;
+    }
+
+    if(ll.includes('top artists on spotify') || ll.includes("'s top artists")) { inSpotify = true; continue; }
+    if(inSpotify) {
+      if(l.length < 50 && !ll.includes('location') && !ll.includes('km away') && !signs.includes(ll) && !/^\d/.test(ll)) {
+        spotify.push(l); continue;
+      } else { inSpotify = false; }
+    }
+
+    if(/^about\s+\w+$/i.test(ll)) continue;
+    if(ll.endsWith("'s location") || ll === 'location') continue;
+    if(['man','woman','non-binary','transgender','other'].includes(ll)) continue;
+    if(ll === 'active' || ll === 'online') continue;
 
     if(ll.match(/^\d{3}\s*cm$/)) { height = l; continue; }
+    if(ll.match(/^\d{2}$/) && !age) { age = ll; continue; }
     if(ll.includes('km away') || ll.includes('km from')) { distance = l; continue; }
-    if(ll === 'vienna' || (ll.match(/^[a-z\s]+,\s*[a-z]+$/) && !signs.includes(ll))) { location = l; continue; }
+    if(ll.startsWith('lives in')) { location = l; continue; }
+    if(ll === 'vienna' || ll.match(/^[a-z\u00c0-\u024f\s]+,\s*[a-z\u00c0-\u024f]+$/i)) { location = l; continue; }
     if(signs.includes(ll)) { sign = l; continue; }
-    if(eduOptions.some(e => ll.includes(e))) { edu = l; continue; }
     if(drinkOptions.includes(ll)) { drink = l; continue; }
-    if(smokeOptions.includes(ll) && !drink) { smoke = l; continue; }
     if(smokeOptions.includes(ll) && drink) { smoke = l; continue; }
-    // Gender lines — skip
-    if(['man','woman','non-binary','other'].includes(ll)) continue;
-    // Lines ending with "location" — skip
-    if(ll.endsWith("'s location") || ll === "location") continue;
+    if(politicsOpts.includes(ll)) { politics = l; continue; }
+    if(religionOpts.some(r => ll === r)) { religion = l; continue; }
+    if(kidsOpts.some(k => ll === k)) { kids = l; continue; }
+    if(lookingForOpts.some(k => ll === k)) { lookingFor = l; continue; }
+    if(eduOptions.some(e => ll.includes(e))) { edu = l; continue; }
+    if(l.match(/\b(19|20)\d{2}\b/) && l.length < 80 && !job) { uni = l; continue; }
 
-    // Prompt detection — lines with "..." or common prompt starters
-    const promptStarters = ["the way to my heart","i really enjoy","we'll get along if","i'm looking for","my most controversial","two truths","i go crazy for","i want someone","unusual skills","my simple pleasures","a life goal","i'm a regular","to me, dating","i promise i'm not","my biggest date fail","together we could","the key to my heart","a random fact","i'm weirdly attracted","let's make sure","never have i ever","i can be","my golden rule","a pro/con","message me if"];
+    const promptStarters = ["the way to my heart","i really enjoy","we'll get along","i'm looking for","my most controversial","two truths","i go crazy for","unusual skills","my simple pleasures","a life goal","i'm a regular","to me, dating","i promise i'm not","my biggest date fail","together we could","the key to my heart","a random fact","i'm weirdly attracted","let's make sure","never have i ever","my golden rule","message me if","my favorite quality","i happiest when","i like","my love language"];
     const isPrompt = promptStarters.some(p => ll.startsWith(p)) || ll.includes('...');
+    if(isPrompt) { currentPrompt = {q:l, a:''}; prompts.push(currentPrompt); continue; }
+    if(currentPrompt && currentPrompt.a === '' && l.length > 1) { currentPrompt.a = l; currentPrompt = null; continue; }
 
-    if(isPrompt) {
-      currentPrompt = {q: l, a: ''};
-      prompts.push(currentPrompt);
-      continue;
-    }
+    if(['like','nope','match','super','settings','edit','photo','back','close','menu','skip','share','report','block','app','bumble','ok','yes','no','send','open','more','photos','verified'].includes(ll)) continue;
+    if(/^\d+$/.test(ll)) continue;
 
-    // If we have a current prompt and this looks like its answer
-    if(currentPrompt && currentPrompt.a === '' && l.length > 0 && !isPrompt) {
-      currentPrompt.a = l;
-      currentPrompt = null;
-      continue;
-    }
-
-    // Otherwise it's about text
-    if(l.length > 10) { about += (about ? ' ' : '') + l; }
+    if(l.length < 60 && l.length > 3 && !job && !uni && nameFound && i < 20) { job = l; continue; }
+    if(l.length > 15) { about += (about ? ' ' : '') + l; }
   }
 
-  // Fill fields
+  const bioParts = [];
+  if(age) bioParts.push('Age: '+age);
+  if(job) bioParts.push('Job: '+job);
+  if(uni) bioParts.push('University: '+uni);
+  if(lookingFor) bioParts.push('Looking for: '+lookingFor);
+  if(kids) bioParts.push('Kids: '+kids);
+  if(religion) bioParts.push('Religion: '+religion);
+  if(politics) bioParts.push('Politics: '+politics);
+  if(spotify.length) bioParts.push('Spotify: '+spotify.slice(0,6).join(', '));
+  if(about) bioParts.push(about);
+
   if(name) document.getElementById('nm_name').value = name;
   if(height) document.getElementById('nm_height').value = height;
   if(sign) document.getElementById('nm_sign').value = sign;
   if(location || distance) document.getElementById('nm_loc').value = [location, distance].filter(Boolean).join(' · ');
-  if(about) document.getElementById('nm_bio').value = about;
+  if(bioParts.length) document.getElementById('nm_bio').value = bioParts.join('\n');
 
-  // Match selects
   if(edu) {
     const sel = document.getElementById('nm_edu');
     for(let o of sel.options) { if(o.text.toLowerCase().includes(edu.toLowerCase())) { sel.value = o.value || o.text; break; } }
@@ -1223,11 +1247,9 @@ function parseScraper() {
     for(let o of sel.options) { if(o.text.toLowerCase() === smoke.toLowerCase()) { sel.value = o.value || o.text; break; } }
   }
 
-  // Fill prompts
   document.getElementById('nm_prompts_list').innerHTML = '';
   prompts.forEach(p => addPromptField(p.q, p.a));
 
-  // Pre-fill conv textareas if we have stashed conv data
   if(window._lastPastedConv) {
     const ca = document.getElementById('nm_conv_app');
     if(ca) ca.value = window._lastPastedConv;
