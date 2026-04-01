@@ -917,6 +917,7 @@ function populateDossierFields() {
 function saveStateLocally() {
   // Incognito mode — no localStorage. State lives in RAM only.
   renderMatches();
+  dpPopulateDropdown();
 }
 
 // ==== CLOUD SYNC ====
@@ -1576,8 +1577,8 @@ function buildForm(m, pre) {
     const shouldInject = currentActiveMatch && (!injectToggle || injectToggle.checked);
     if(shouldInject) {
       if(fid==='platform'&&!pv) pv = currentActiveMatch.platform;
-      if(fid==='her_bio'&&!pv) {
-        // Build rich profile string from structured match data
+      if(fid==='her_bio') {
+        // Always build from match when inject is on — match data is the source of truth
         const m = currentActiveMatch;
         const parts = [];
         const stats = [m.height, m.sign, m.edu,
@@ -1590,20 +1591,21 @@ function buildForm(m, pre) {
         if(m.prompts&&m.prompts.length) {
           m.prompts.forEach(function(p){ if(p.q||p.a) parts.push('"'+p.q+'": '+p.a); });
         }
-        pv = parts.join(' ');
+        if(parts.length) pv = parts.join(' ');
       }
-      if(fid==='her_name'&&!pv) pv = currentActiveMatch.name;
+      if(fid==='her_name') pv = currentActiveMatch.name;
       // Auto-fill conversation fields from stored match data
-      if((fid==='conv'||fid==='fdp_conv')&&!cv&&!extConv) {
+      if((fid==='conv'||fid==='fdp_conv')&&!extConv) {
         const convParts = [];
         if(currentActiveMatch.convApp) convParts.push('--- App conversation ---\n'+currentActiveMatch.convApp);
         if(currentActiveMatch.convWA) convParts.push('--- WhatsApp ---\n'+currentActiveMatch.convWA);
-        if(convParts.length) cv = convParts.join('\n\n');
+        if(convParts.length && !pv) pv = convParts.join('\n\n');
       }
     }
     // URL param pre-fill from scraper bookmarklet (fallback if no match loaded and no saved value)
     if(fid==='her_bio' && !pv && urlPreFill.bio) pv = urlPreFill.bio;
     if((fid==='conv'||fid==='fdp_conv') && !pv && urlPreFill.conv) pv = urlPreFill.conv;
+    // cv is the final value shown in the field — extConv takes priority for message/conv fields
     var cv = (fid==='her_msg'||fid==='conv') && extConv ? extConv : pv;
     var lbl = '<label>'+d.l+(d.opt?' <span class="op">(optional)</span>':'')+'</label>';
     if(d.t==='ta'){w.innerHTML=lbl+'<textarea id="f_'+fid+'" rows="'+(d.rows||3)+'" placeholder="'+(d.p||'')+'">'+eH(cv)+'</textarea>';}
@@ -2021,25 +2023,30 @@ async function smartPaste() {
     msgEl.style.color = 'var(--gr)';
     msgEl.textContent = '✓ Profile detected. Parsing...';
     showNewMatchUI();
-    // Scroll to the new match UI
     setTimeout(()=>{ const el=document.getElementById('new-match-ui'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }, 100);
-    const profilePart = text.split(/={3}\s*CONVERSATION\s*={3}/)[0] || text;
-    document.getElementById('nm_scraper').value = profilePart;
-    parseScraper();
-    // Stash conversation separately
+
+    // Stash conversation FIRST so parseScraper() can fill the conv fields
     if(hasConv && text.includes('CONVERSATION')) {
       const convPart = text.split(/={3}\s*CONVERSATION\s*={3}/)[1]||'';
-      window._lastPastedConv = convPart.trim();
-      // Also pre-fill the WA conv field if it looks like WhatsApp format
       const isWA = convPart.match(/\d{1,2}\/\d{1,2}\/\d{2,4}/);
       if(isWA) {
         window._lastPastedConvWA = convPart.trim();
         window._lastPastedConv = '';
+      } else {
+        window._lastPastedConv = convPart.trim();
+        window._lastPastedConvWA = '';
       }
-      msgEl.textContent = '✓ Profile parsed + conversation stored. Check fields below & save.';
-    } else {
-      msgEl.textContent = '✓ Profile parsed. Check fields below & save.';
     }
+
+    // Now parse profile — conv fields will be filled inside parseScraper()
+    const profilePart = text.split(/={3}\s*CONVERSATION\s*={3}/)[0] || text;
+    document.getElementById('nm_scraper').value = profilePart;
+    parseScraper();
+
+    const hasConvMsg = window._lastPastedConv || window._lastPastedConvWA;
+    msgEl.textContent = hasConvMsg
+      ? '✓ Profile + conversation parsed. Check fields below & save.'
+      : '✓ Profile parsed. Check fields below & save.';
   } else if(hasConv) {
     // Conversation only — ask user which match to attach it to, then route to Date Prep
     msgEl.style.color = 'var(--yl)';
