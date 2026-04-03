@@ -704,6 +704,12 @@ body.stealth-mode .btn,body.stealth-mode .btn2{background:#eee !important;color:
       <div id="edit_prompts_list"></div>
       <button class="btn2 btn-sm" onclick="addEditPromptField()" style="margin-top:6px;width:100%;">+ Add prompt</button>
     </div>
+    <div class="div"></div>
+    <div class="row">
+      <label>Conversation <span class="op">(Bumble/app — paste latest to keep Bond Reply current)</span></label>
+      <textarea id="edit_conv_app" rows="5" placeholder="Her: Hey, how's your week going?&#10;Me: Pretty good — just got back from hiking. You?&#10;Her: Oh nice! Where did you go?"></textarea>
+      <div id="edit-conv-ts" style="font-size:11px;color:var(--t3);font-family:'SF Mono',monospace;margin-top:4px;min-height:14px;"></div>
+    </div>
     <button class="btn" onclick="saveEditMatch()">Save Changes</button>
   </div>
 </div>
@@ -1097,6 +1103,7 @@ function saveNewMatch() {
     status: document.getElementById('nm_status').value,
     convApp: (document.getElementById('nm_conv_app')&&document.getElementById('nm_conv_app').value.trim()) || window._lastPastedConv || '',
     convWA: (document.getElementById('nm_conv_wa')&&document.getElementById('nm_conv_wa').value.trim()) || window._lastPastedConvWA || '',
+    convUpdatedAt: ((document.getElementById('nm_conv_app')&&document.getElementById('nm_conv_app').value.trim()) || window._lastPastedConv || window._lastPastedConvWA) ? Date.now() : null,
     height: document.getElementById('nm_height').value.trim(),
     sign: document.getElementById('nm_sign').value.trim(),
     edu: document.getElementById('nm_edu').value,
@@ -1275,6 +1282,7 @@ function renderMatches() {
         <div class="sname" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">${m.name}${badge}</div>
         <div class="ssub">${m.platform} · ${m.status}</div>
         ${stats?'<div style="font-size:11px;color:var(--t3);margin-top:2px;">'+stats+'</div>':''}
+        ${m.convUpdatedAt?'<div style="font-size:10px;color:var(--t3);margin-top:3px;font-family:monospace;">conv · '+formatConvAge(m.convUpdatedAt)+'</div>':''}
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
         <button class="btn2 btn-sm" onclick="editMatch(event,'${m.id}')" style="font-size:10px;padding:4px 8px;min-height:28px;">✏️ Edit</button>
@@ -1441,7 +1449,26 @@ function getSys() {
 }
 
 function vBlock(v){return v?'\n\nMY VOICE — what I want to say in my own words:\n"'+v+'"\n\nKeep my intent. Bond-ify the delivery — remove anything needy or low value.':'';}
-function stBlock(){var st=gv('subtext');if(!st||st==='not specified')return'';var sm={'Literal / just communicating':'respond to face value','Playful tease':'match with dry wit or light counter-tease','Sarcasm':'meet with calm amusement, do not get defensive','Shit test':'do not engage the frame, pass with unbothered confidence','Testing my interest':'give just enough to signal interest without chasing','Flirting':'match the energy, slightly raise tension','Hard to read / not sure':'generate options that work across multiple interpretations'};return'\n\nSUBTEXT: '+st+'. Instruction: '+(sm[st]||'adjust tone accordingly')+'.';}
+function convHistBlock(){
+  if(!currentActiveMatch) return '';
+  const parts=[];
+  if(currentActiveMatch.convApp) parts.push(currentActiveMatch.convApp);
+  if(currentActiveMatch.convWA) parts.push('--- WhatsApp ---\n'+currentActiveMatch.convWA);
+  if(!parts.length) return '';
+  return '\n\nFULL CONVERSATION HISTORY (read this first — understand the dynamic, what has already been said, her communication style, topics covered, her energy level, before generating anything):\n'+parts.join('\n\n');
+}
+function formatConvAge(ts){
+  if(!ts) return '';
+  const diff=Date.now()-ts; const m=Math.floor(diff/60000);
+  if(m<2) return 'just now';
+  if(m<60) return m+'m ago';
+  const h=Math.floor(m/60);
+  if(h<24) return h+'h ago';
+  const d=Math.floor(h/24);
+  if(d===1) return 'yesterday';
+  if(d<7) return d+'d ago';
+  return new Date(ts).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+}function stBlock(){var st=gv('subtext');if(!st||st==='not specified')return'';var sm={'Literal / just communicating':'respond to face value','Playful tease':'match with dry wit or light counter-tease','Sarcasm':'meet with calm amusement, do not get defensive','Shit test':'do not engage the frame, pass with unbothered confidence','Testing my interest':'give just enough to signal interest without chasing','Flirting':'match the energy, slightly raise tension','Hard to read / not sure':'generate options that work across multiple interpretations'};return'\n\nSUBTEXT: '+st+'. Instruction: '+(sm[st]||'adjust tone accordingly')+'.';}
 function tmBlock(){var t=gv('time_since');return(t&&t!=='Just now'&&t!=='not specified')?'\nTime since her last message: '+t+'.':'';}
 function vbBlock(){var v=gv('her_vibe');return v?'\n\nHer vibe / bio impression: '+v:'';}
 function nmBlock(){var n=gv('her_name');return n?' Address her as '+n+' where it fits naturally — do not force it, only use when it flows.':'';}
@@ -1668,7 +1695,7 @@ function getModeP(id, v) {
   function nmBlock2(){var n=gv('her_name');return n?' Address her as '+n+' where it fits naturally.':'';}
   function moodBlock2(){var m=gv('mood');return(m&&m!=='Just started'&&m!=='not specified')?'\n\nConversation mood so far: '+m+'. Let this inform the energy level of your suggestions.':'';}
   function lmBlock2(){var lm=gv('last_met');return(lm&&lm!=='Never met yet'&&lm!=='not specified')?'\n\nLast met in person: '+lm+'. Factor this into how familiar the tone should be.':'';}
-  if(id==='bond_reply')return S+'MODE: BOND REPLY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+nmBlock2()+moodBlock2()+lmBlock2()+tmBlock()+vbBlock()+stBlock()+'\n\nHer message:\n"'+gv('her_msg')+'"'+(gv('context')?'\n\nContext:\n'+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Read her message carefully. Acknowledge her tone and note any specific detail worth calling back.\n2. SUBTEXT CHECK: if subtext was specified, read through that lens first.\n3. MIRROR CHECK: what is her investment level? All replies must match it.\n4. Generate 4 reply styles: Calm and charming / Short and confident / Warm and genuine / Lightly flirtatious.\n5. For each: message EN+DE, 1-sentence psychological note, Question Logic decision.\n6. Flag any connection risk.';
+  if(id==='bond_reply')return S+'MODE: BOND REPLY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+nmBlock2()+moodBlock2()+lmBlock2()+tmBlock()+vbBlock()+stBlock()+convHistBlock()+'\n\nHer message:\n"'+gv('her_msg')+'"'+(gv('context')?'\n\nContext:\n'+gv('context'):'')+vBlock(v)+'\n\nInstructions:\n1. Read her message carefully. Acknowledge her tone and note any specific detail worth calling back.\n2. SUBTEXT CHECK: if subtext was specified, read through that lens first.\n3. MIRROR CHECK: what is her investment level? All replies must match it.\n4. Generate 4 reply styles: Calm and charming / Short and confident / Warm and genuine / Lightly flirtatious.\n5. For each: message EN+DE, 1-sentence psychological note, Question Logic decision.\n6. Flag any connection risk.';
   if(id==='bondify')return S+'MODE: BOND-IFY\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+'\n\nMy draft:\n"'+gv('my_draft')+'"\n\nInstructions:\n1. Diagnose in 1 honest sentence — what is the core problem?\n2. Rewrite as Bond. Show original phrase, Bond version, and psychological reason. Tag: needy removed / confidence added / shorter / word choice / structure / framing.\n3. List 2-4 specific changes.\n4. Question Logic: does the Bond version end with a question? Why or why not?\n5. Connection risk: original vs Bond version.';
   if(id==='presend')return S+'MODE: PRE-SEND CHECK\n\nPlatform: '+gv('platform')+'\nStage: '+gv('stage')+'\n\nMessage about to send:\n"'+gv('my_draft')+'"\n\nInstructions:\n1. Scores: Confidence 0-10 / Neediness 0-10 / Length: too long, good, or too short.\n2. Mirror check: does this match her energy level or exceed it?\n3. Issues (0-3 max): what is wrong, psychological reason, specific fix.\n4. Improved version if needed.\n5. Question Logic decision.\n6. Connection risk of original vs improved.';
   if(id==='opener')return S+'MODE: OPENER\n\nPlatform: '+gv('platform')+'\nStyle: '+gv('opener_style')+'\n\nHer profile:\n'+gv('her_bio')+vBlock(v)+'\n\nInstructions:\n1. Note 3 specific details from her profile most men would ignore.\n2. Generate 3 openers — each referencing something specific from her profile. No generic lines.\n3. For each: the message, which detail you used, why specificity beats generic openers.\n4. Question Logic for each opener.';
@@ -2105,6 +2132,7 @@ function dpSaveConv() {
   const waField = document.getElementById('dp-conv-wa');
   if(appField) dpActiveMatch.convApp = appField.value;
   if(waField) dpActiveMatch.convWA = waField.value;
+  dpActiveMatch.convUpdatedAt = Date.now();
   // Debounce — save 2s after user stops typing
   clearTimeout(window._convSaveTimer);
   window._convSaveTimer = setTimeout(()=>{
@@ -2152,6 +2180,11 @@ function editMatch(e, id) {
   document.getElementById('edit_smoke').value = m.smoke || '';
   document.getElementById('edit_loc').value = m.location || '';
   document.getElementById('edit_bio').value = m.bio || '';
+  // Conversation
+  const convField = document.getElementById('edit_conv_app');
+  if(convField) convField.value = m.convApp || '';
+  const convTs = document.getElementById('edit-conv-ts');
+  if(convTs) convTs.textContent = m.convUpdatedAt ? 'Last updated: '+formatConvAge(m.convUpdatedAt) : '';
   // Load prompts
   const list = document.getElementById('edit_prompts_list');
   list.innerHTML = '';
@@ -2195,6 +2228,15 @@ function saveEditMatch() {
   m.smoke = document.getElementById('edit_smoke').value;
   m.location = document.getElementById('edit_loc').value.trim();
   m.bio = document.getElementById('edit_bio').value.trim();
+  // Conversation
+  const editConvApp = document.getElementById('edit_conv_app');
+  if(editConvApp) {
+    const newConv = editConvApp.value.trim();
+    if(newConv !== (m.convApp||'').trim()) {
+      m.convApp = newConv;
+      m.convUpdatedAt = Date.now();
+    }
+  }
   // Save prompts
   const prompts = [];
   document.querySelectorAll('.edit-prompt-row').forEach(row=>{
