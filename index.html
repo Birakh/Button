@@ -1277,20 +1277,77 @@ function renderMatches() {
     const stats = [m.height, m.sign, m.edu, m.drink&&m.drink!=='—'?m.drink:null].filter(Boolean).join(' · ');
     const dateCount = (m.dates||[]).length;
     const badge = dateCount>0?'<span style="font-size:10px;background:rgba(200,169,110,.15);color:var(--ac);border:.5px solid rgba(200,169,110,.3);border-radius:10px;padding:2px 7px;font-family:monospace;margin-left:6px;">'+dateCount+' date'+(dateCount>1?'s':'')+'</span>':'';
-    h+=`<div class="sitem" style="${isAct}" onclick="loadMatch('${m.id}')">
-      <div style="flex:1;">
-        <div class="sname" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">${m.name}${badge}</div>
-        <div class="ssub">${m.platform} · ${m.status}</div>
-        ${stats?'<div style="font-size:11px;color:var(--t3);margin-top:2px;">'+stats+'</div>':''}
-        ${m.convUpdatedAt?'<div style="font-size:10px;color:var(--t3);margin-top:3px;font-family:monospace;">conv · '+formatConvAge(m.convUpdatedAt)+'</div>':''}
+    const tsLine = m.convUpdatedAt ? '<span style="color:var(--t3);">conv · '+formatConvAge(m.convUpdatedAt)+'</span>' : '<span style="color:var(--t3);">no conv yet</span>';
+    // Last message preview — grab last non-empty line of stored conv
+    let lastLine = '';
+    if(m.convApp) {
+      const lines = m.convApp.split('\n').map(l=>l.trim()).filter(Boolean);
+      if(lines.length) lastLine = lines[lines.length-1];
+      if(lastLine.length > 60) lastLine = lastLine.slice(0,60)+'…';
+    }
+    h+=`<div style="margin-bottom:8px;">
+      <div class="sitem" style="margin-bottom:0;${isAct}" onclick="loadMatch('${m.id}')">
+        <div style="flex:1;min-width:0;">
+          <div class="sname" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">${m.name}${badge}</div>
+          <div class="ssub">${m.platform} · ${m.status}</div>
+          ${stats?'<div style="font-size:11px;color:var(--t3);margin-top:2px;">'+stats+'</div>':''}
+          ${lastLine?'<div style="font-size:12px;color:var(--t2);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;font-style:italic;">'+lastLine+'</div>':''}
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <span style="font-size:10px;font-family:monospace;">${tsLine}</span>
+            <button onclick="toggleConvPanel(event,'${m.id}')" style="background:transparent;border:.5px solid var(--bo2);border-radius:6px;color:var(--t2);font-size:10px;padding:2px 7px;cursor:pointer;font-family:monospace;min-height:0;" id="conv-btn-${m.id}">💬 edit conv</button>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+          <button class="btn2 btn-sm" onclick="editMatch(event,'${m.id}')" style="font-size:10px;padding:4px 8px;min-height:28px;">✏️ Edit</button>
+          <button class="sdel-sm" onclick="archiveMatch(event,'${m.id}')">BURN</button>
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
-        <button class="btn2 btn-sm" onclick="editMatch(event,'${m.id}')" style="font-size:10px;padding:4px 8px;min-height:28px;">✏️ Edit</button>
-        <button class="sdel-sm" onclick="archiveMatch(event,'${m.id}')">BURN</button>
+      <div id="conv-panel-${m.id}" style="display:none;background:var(--bg3);border:.5px solid var(--ac);border-top:none;border-radius:0 0 var(--r) var(--r);padding:12px;">
+        <div style="font-size:10px;color:var(--ac);font-family:monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">⚡ Quick Bond Reply</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          <input id="qr-input-${m.id}" type="text" placeholder="Paste her latest message..." onclick="event.stopPropagation()" style="flex:1;background:var(--bg2);border:.5px solid var(--bo2);border-radius:var(--r);padding:9px 12px;font-size:14px;color:var(--t);outline:none;" onkeypress="if(event.key==='Enter')quickBondReply(event,'${m.id}')">
+          <button onclick="quickBondReply(event,'${m.id}')" style="background:var(--ac);color:#0e0e10;border:none;border-radius:var(--r);padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">→ Reply</button>
+        </div>
+        <div style="font-size:10px;color:var(--ac);font-family:monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">Conversation history</div>
+        <textarea id="conv-ta-${m.id}" rows="6" style="width:100%;background:var(--bg2);border:.5px solid var(--bo2);border-radius:var(--r);padding:10px 12px;font-size:13px;color:var(--t);font-family:'SF Mono','Fira Code','Courier New',monospace;line-height:1.6;resize:vertical;" placeholder="Her: Hey, how's your week going?&#10;Me: Pretty good. You?&#10;Her: Good! So what do you actually do for fun?" onclick="event.stopPropagation()">${(m.convApp||'').replace(/</g,'&lt;')}</textarea>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button onclick="saveInlineConv('${m.id}')" style="flex:2;background:var(--bg2);color:var(--t2);border:.5px solid var(--bo);border-radius:var(--r);padding:9px;font-size:13px;cursor:pointer;">Save conversation</button>
+          <button onclick="toggleConvPanel(event,'${m.id}')" style="flex:1;background:transparent;color:var(--t3);border:.5px solid var(--bo);border-radius:var(--r);padding:9px;font-size:13px;cursor:pointer;">Close</button>
+        </div>
       </div>
     </div>`;
   });
   el.innerHTML=h;
+}
+function toggleConvPanel(e, id) {
+  e.stopPropagation();
+  const panel = document.getElementById('conv-panel-'+id);
+  if(!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  // Close all other panels first
+  document.querySelectorAll('[id^="conv-panel-"]').forEach(p=>{ p.style.display='none'; });
+  document.querySelectorAll('[id^="conv-btn-"]').forEach(b=>{ b.textContent='💬 edit conv'; b.style.color=''; });
+  if(!isOpen) {
+    panel.style.display = 'block';
+    const btn = document.getElementById('conv-btn-'+id);
+    if(btn) { btn.textContent='✕ close'; btn.style.color='var(--ac)'; }
+    const ta = document.getElementById('conv-ta-'+id);
+    if(ta) setTimeout(()=>ta.focus(),50);
+  }
+}
+function saveInlineConv(id) {
+  const m = bondState.matches.find(m=>m.id===id);
+  if(!m) return;
+  const ta = document.getElementById('conv-ta-'+id);
+  if(!ta) return;
+  m.convApp = ta.value.trim();
+  m.convUpdatedAt = Date.now();
+  if(currentActiveMatch && currentActiveMatch.id===id) currentActiveMatch = m;
+  saveStateLocally(); forceGistSync();
+  showN('Conversation saved · '+m.name);
+  // Re-render but keep panel closed
+  renderMatches();
+  dpPopulateDropdown();
 }
 function loadMatch(id) {
   currentActiveMatch = bondState.matches.find(m=>m.id===id);
@@ -2604,6 +2661,32 @@ function swMain(id, el) {
   el.className='tnav-btn on';
   window.scrollTo({top:0,behavior:'smooth'});
   if(id==='dateprep') dpPopulateDropdown();
+}
+function swMainProg(id) {
+  const btns = document.querySelectorAll('.tnav-btn');
+  const ids = ['matches','prompts','dateprep','reference'];
+  const idx = ids.indexOf(id);
+  if(idx>=0 && btns[idx]) swMain(id, btns[idx]);
+}
+function quickBondReply(e, matchId) {
+  e.stopPropagation();
+  const input = document.getElementById('qr-input-'+matchId);
+  if(!input) return;
+  const msg = input.value.trim();
+  if(!msg) { input.style.borderColor='var(--rd)'; setTimeout(()=>input.style.borderColor='',1200); return; }
+  currentActiveMatch = bondState.matches.find(m=>m.id===matchId);
+  if(!currentActiveMatch) return;
+  swMainProg('prompts');
+  const psel = document.getElementById('prompts-match-select');
+  if(psel) psel.value = matchId;
+  _showMatchBanner();
+  setTimeout(function(){
+    selMode2('bond_reply', {her_msg: msg});
+    setTimeout(function(){
+      const fc = document.getElementById('form-card');
+      if(fc) fc.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 120);
+  }, 80);
 }
 function swRef(id, el) {
   document.querySelectorAll('.rpane').forEach(function(p){p.className='rpane';});
